@@ -1,0 +1,5 @@
+{
+  "name": "RedMaxx Monitor SEMASC",
+  "description": "Plataforma de acompanhamento de relatórios diários de envios Bolsa Família com extração inteligente de dados por imagem.",
+  "requestFramePermissions": []
+}
