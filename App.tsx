@@ -10,23 +10,25 @@ import {
   Send, Smartphone, Users, Clock, History, LayoutDashboard,
   Loader2, AlertCircle, CheckCircle2, ChevronRight, ClipboardPaste,
   ShieldCheck, ArrowUpRight, Maximize2, FileText, Sparkles, Zap,
-  Menu, X, Lock, Play, Calendar, ChevronDown, Wand2
+  Menu, X, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal
 } from 'lucide-react';
 import { MonthlyStats } from './types.ts';
 import { extractDataFromImage } from './services/geminiService.ts';
 import StatCard from './components/StatCard.tsx';
-import './firebase.ts'; // Initialize firebase
+import './firebase.ts';
 
-const CHART_PALETTE = ['#F43F5E', '#0F172A', '#64748B', '#CBD5E1'];
+const CHART_PALETTE = ['#991B1B', '#1E293B', '#64748B', '#94A3B8'];
+
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/RELAT%C3%93RIO%20SEMASC.png?alt=media&token=d51423a5-76ff-4f03-bb36-6c9865f3641e";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode }> = ({ label, value, color, icon }) => (
-  <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md">
-    <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center text-white shadow-lg shrink-0`}>
-      {icon}
+  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200">
+    <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center text-white shadow-md shrink-0`}>
+      {React.cloneElement(icon as React.ReactElement, { size: 18 })}
     </div>
     <div className="min-w-0">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5 truncate">{label}</p>
-      <p className="text-2xl font-black text-slate-900 leading-none">{value.toLocaleString('pt-BR')}</p>
+      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">{label}</p>
+      <p className="text-xl font-bold text-slate-900 leading-none">{value.toLocaleString('pt-BR')}</p>
     </div>
   </div>
 );
@@ -51,15 +53,11 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'new'>('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const toggleYear = (year: number) => {
-    setExpandedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-  };
-
   const TOTAL_BASE_IDENTIFICADA = 7439;
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('redmaxx_v10_history');
-    const savedCurrent = localStorage.getItem('redmaxx_v10_current');
+    const savedHistory = localStorage.getItem('redmaxx_v11_history');
+    const savedCurrent = localStorage.getItem('redmaxx_v11_current');
     
     if (savedHistory && savedCurrent) {
       setHistory(JSON.parse(savedHistory));
@@ -76,8 +74,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('redmaxx_v10_history', JSON.stringify(history));
-    localStorage.setItem('redmaxx_v10_current', JSON.stringify(currentMonth));
+    localStorage.setItem('redmaxx_v11_history', JSON.stringify(history));
+    localStorage.setItem('redmaxx_v11_current', JSON.stringify(currentMonth));
   }, [history, currentMonth]);
 
   const updateCurrentData = (data: Partial<MonthlyStats>) => {
@@ -97,48 +95,35 @@ const App: React.FC = () => {
       const match = text.match(pattern);
       return match ? parseInt(match[1].replace(/\D/g, '')) : null;
     };
-
-    const enviado = parseNumber(/(?:enviado|sucesso|enviados)[:\s-]*([\d.,]+)/i);
+    const enviado = parseNumber(/(?:enviado|sucesso|enviados|recebidas)[:\s-]*([\d.,]+)/i);
     const naoWhatsapp = parseNumber(/(?:não.*whatsapp|inválidos|invalido)[:\s-]*([\d.,]+)/i);
     const semNumero = parseNumber(/(?:sem.*número|cadastros.*sem|omisso)[:\s-]*([\d.,]+)/i);
     const paraEnviar = parseNumber(/(?:para.*enviar|pendente|fila)[:\s-]*([\d.,]+)/i);
-
     const updates: Partial<MonthlyStats> = {};
     if (enviado !== null) updates.enviado = enviado;
     if (naoWhatsapp !== null) updates.naoWhatsapp = naoWhatsapp;
     if (semNumero !== null) updates.semNumero = semNumero;
     if (paraEnviar !== null) updates.paraEnviar = paraEnviar;
-
-    if (Object.keys(updates).length > 0) {
-      updateCurrentData(updates);
-    }
+    if (Object.keys(updates).length > 0) updateCurrentData(updates);
   };
 
   const processImageFile = async (file: File) => {
     setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = (reader.result as string).split(',')[1];
-        try {
-          const extracted = await extractDataFromImage(base64);
-          updateCurrentData({
-            enviado: extracted.enviado || 0,
-            naoWhatsapp: extracted.naoWhatsapp || 0,
-            semNumero: extracted.semNumero || 0,
-            paraEnviar: extracted.paraEnviar || 0
-          });
-          setActiveTab('new');
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      setIsProcessing(false);
-    }
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64 = (reader.result as string).split(',')[1];
+      try {
+        const extracted = await extractDataFromImage(base64);
+        updateCurrentData({
+          enviado: extracted.enviado || 0,
+          naoWhatsapp: extracted.naoWhatsapp || 0,
+          semNumero: extracted.semNumero || 0,
+          paraEnviar: extracted.paraEnviar || 0
+        });
+        setActiveTab('new');
+      } catch (error) { console.error(error); } finally { setIsProcessing(false); }
+    };
+    reader.readAsDataURL(file);
   };
 
   useEffect(() => {
@@ -156,26 +141,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('paste', handlePaste);
   }, [currentMonth]);
 
-  const handleCloseMonth = () => {
-    if (confirm(`Fechar competência ${currentMonth.monthName}?`)) {
-      setHistory([...history, { ...currentMonth, id: Date.now().toString(), isClosed: true }]);
-      handleStartNextMonth();
-    }
-  };
-
-  const handleStartNextMonth = () => {
-    const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    const [name, yearStr] = currentMonth.monthName.split('/');
-    let year = parseInt(yearStr);
-    let monthIdx = months.indexOf(name);
-    monthIdx++;
-    if (monthIdx > 11) { monthIdx = 0; year++; }
-    const nextMonthName = `${months[monthIdx]}/${year}`;
-    setCurrentMonth({ id: 'current', monthName: nextMonthName, enviado: 0, naoWhatsapp: 0, semNumero: 0, paraEnviar: 0, totalProcessado: 0, taxaSucesso: 0, isClosed: false });
-    setActiveTab('new');
-    setSmartPasteText('');
-  };
-
   const groupedCalendarView = useMemo(() => {
     const monthsArr = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const years = [2025, 2026, 2027];
@@ -188,19 +153,14 @@ const App: React.FC = () => {
       const yearMonths = monthsArr.map((m, idx) => {
         const name = `${m}/${year}`;
         const histMatch = history.find(h => h.monthName === name);
-        
-        // 2025 starts at September (index 8)
         if (year === 2025 && idx < 8) return null;
-
         if (histMatch) return { ...histMatch, status: 'Consolidado' };
         if (name === currentMonth.monthName) return { ...currentMonth, status: 'Em andamento' };
-        
         if (year > curYear || (year === curYear && idx > curMonthIdx)) {
-          return { monthName: name, status: 'Aguardando período', enviado: 0, totalProcessado: 0, taxaSucesso: 0 };
+          return { monthName: name, status: 'Aguardando', enviado: 0, totalProcessado: 0, taxaSucesso: 0 };
         }
         return null;
       }).filter(x => x !== null);
-      
       if (yearMonths.length > 0) result[year] = yearMonths;
     });
     return result;
@@ -210,25 +170,32 @@ const App: React.FC = () => {
   const taxaTotalProcessamento = Number(((totalBaseProcessada / TOTAL_BASE_IDENTIFICADA) * 100).toFixed(2));
 
   const pieData = [
-    { name: 'Sucesso', value: currentMonth.enviado },
-    { name: 'Inválidos', value: currentMonth.naoWhatsapp },
-    { name: 'S/ Número', value: currentMonth.semNumero },
-    { name: 'Pendente', value: currentMonth.paraEnviar },
+    { name: 'Recebidas', value: currentMonth.enviado },
+    { name: 'Não WhatsApp', value: currentMonth.naoWhatsapp },
+    { name: 'Sem Número', value: currentMonth.semNumero },
+    { name: 'Para Enviar', value: currentMonth.paraEnviar },
   ];
 
   const sidebarContent = (
-    <>
-      <div className="flex items-center gap-4 mb-10 px-2">
-        <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-          <Zap className="text-white w-7 h-7 fill-white" />
+    <div className="flex flex-col h-full py-2">
+      {/* CONTAINER DA LOGO FUTURISTA (CYBER-POD) */}
+      <div className="relative mb-16 p-2">
+        <div className="absolute inset-0 bg-white/95 rounded-[2rem] transform -rotate-2 skew-x-1 shadow-[0_20px_40px_rgba(0,0,0,0.4)]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100 rounded-[2rem] border-2 border-white/50 shadow-inner overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '10px 10px' }} />
+          <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-red-600/20 rounded-tl-md" />
+          <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-red-600/20 rounded-br-md" />
         </div>
-        <div>
-          <h1 className="text-2xl font-black tracking-tighter uppercase text-white leading-none">RedMaxx</h1>
-          <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">Executive Intelligence</span>
+        <div className="relative z-10 flex justify-center py-8 px-4">
+          <img 
+            src={LOGO_URL} 
+            alt="RedMaxx Logo" 
+            className="h-32 w-auto object-contain transition-all hover:scale-110 duration-500 drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]" 
+          />
         </div>
       </div>
 
-      <nav className="space-y-3 mt-6">
+      <nav className="space-y-1.5 flex-1">
         {[
           { id: 'dashboard', label: 'Monitoramento', icon: LayoutDashboard },
           { id: 'history', label: 'Consolidado', icon: Calendar },
@@ -237,45 +204,45 @@ const App: React.FC = () => {
           <button 
             key={item.id}
             onClick={() => setActiveTab(item.id as any)}
-            className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-2xl font-black scale-105' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-xl font-bold translate-x-1' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
           >
-            <item.icon size={20} />
-            <span className="text-sm tracking-wide font-bold">{item.label}</span>
+            <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+            <span className="text-sm tracking-tight">{item.label}</span>
           </button>
         ))}
       </nav>
 
-      <div className="mt-auto space-y-4">
-        <button onClick={handleCloseMonth} className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white/10 border border-white/10 text-white font-bold text-[11px] hover:bg-white/20 transition-all uppercase tracking-widest">
-           <Lock size={16} /> Fechar Ciclo
+      <div className="mt-auto space-y-3 pt-6 border-t border-white/10">
+        <button className="w-full py-3.5 rounded-xl bg-white/5 border border-white/5 text-white/50 font-bold text-[10px] hover:bg-white/10 transition-all uppercase tracking-widest">
+           Fechar Ciclo
         </button>
-        <button onClick={handleStartNextMonth} className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-white text-red-900 font-black text-[11px] shadow-xl hover:bg-red-50 transition-all uppercase tracking-widest">
-           <Play size={16} /> Próximo Mês
+        <button className="w-full py-4 rounded-xl bg-white text-red-900 font-bold text-[10px] shadow-lg hover:bg-red-50 transition-all uppercase tracking-widest">
+           Próximo Mês
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#fcfcfd] pb-24 md:pb-0">
-      <aside className="hidden md:flex w-80 premium-red-gradient flex-col p-8 sticky top-0 h-screen z-30 shadow-2xl shrink-0">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+      <aside className="hidden md:flex w-64 premium-red-gradient flex-col p-6 sticky top-0 h-screen z-30 shadow-2xl shrink-0">
         {sidebarContent}
       </aside>
 
-      <main className="flex-1 min-w-0 p-6 sm:p-10 lg:p-14">
-        <header className="flex flex-col sm:flex-row items-center justify-between gap-8 mb-12 sm:mb-16">
+      <main className="flex-1 min-w-0 p-5 sm:p-10 lg:p-14 mb-20 md:mb-0">
+        <header className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-14">
           <div className="text-center sm:text-left">
-            <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.4em] mb-2">Plataforma SEMASC v9.0</p>
-            <h2 className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter">
-              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Monitor Inteligente'}
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight">
+              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Monitoramento'}
             </h2>
           </div>
           
-          <div className="flex items-center gap-5 bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm pr-10">
-             <div className="w-14 h-14 bg-slate-950 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-200"><Users size={24} /></div>
+          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm pr-8 shrink-0">
+             <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg"><Users size={20} /></div>
              <div>
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Base Total Ativa</p>
-               <p className="text-2xl font-black text-slate-800">{TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR')}</p>
+               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Base Total Ativa</p>
+               <p className="text-2xl font-bold text-slate-900 leading-none">{TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR')}</p>
              </div>
           </div>
         </header>
@@ -284,48 +251,48 @@ const App: React.FC = () => {
           {activeTab === 'dashboard' && (
             <motion.div key="dash" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-12">
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-                <div className="bg-white p-10 sm:p-14 rounded-[3.5rem] border border-slate-100 shadow-sm xl:col-span-1 flex flex-col">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.35em] text-slate-400 mb-12">Breakdown Competência</h3>
+                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-1 flex flex-col">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-10">Distribuição Mensal</h3>
                   
-                  <div className="grid grid-cols-1 gap-5 mb-14">
-                    <MiniStatusCard label="Sucesso" value={currentMonth.enviado} color="bg-rose-500" icon={<Send size={20}/>} />
-                    <MiniStatusCard label="Invalidados" value={currentMonth.naoWhatsapp} color="bg-slate-950" icon={<Smartphone size={20}/>} />
-                    <MiniStatusCard label="Omissos" value={currentMonth.semNumero} color="bg-slate-500" icon={<AlertCircle size={20}/>} />
-                    <MiniStatusCard label="Fila Pendente" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<Clock size={20}/>} />
+                  <div className="grid grid-cols-1 gap-4 mb-12">
+                    <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} />
+                    <MiniStatusCard label="Contatos Não São WhatsApp" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} />
+                    <MiniStatusCard label="Contatos Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} />
+                    <MiniStatusCard label="Para Enviar" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<SendHorizontal/>} />
                   </div>
 
-                  <div className="h-[280px] opacity-90 relative">
+                  <div className="h-[260px] relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData} innerRadius={90} outerRadius={125} paddingAngle={10} dataKey="value">
+                        <Pie data={pieData} innerRadius={85} outerRadius={110} paddingAngle={8} dataKey="value">
                           {pieData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} stroke="none" />)}
                         </Pie>
-                        <Tooltip contentStyle={{borderRadius: '25px', border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.1)'}} />
+                        <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sucesso</span>
-                       <span className="text-3xl font-black text-slate-900">{currentMonth.taxaSucesso}%</span>
+                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taxa</span>
+                       <span className="text-3xl font-bold text-slate-900">{currentMonth.taxaSucesso}%</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-10 sm:p-14 rounded-[3.5rem] border border-slate-100 shadow-sm xl:col-span-2 flex flex-col">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.35em] text-slate-400 mb-12">Evolução de Entrega</h3>
+                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-2 flex flex-col">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-10">Evolução Histórica</h3>
                   <div className="flex-1 min-h-[450px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={[...history].concat([currentMonth])}>
                         <defs>
                           <linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1">
-                             <stop offset="5%" stopColor="#F43F5E" stopOpacity={0.25}/>
-                             <stop offset="95%" stopColor="#F43F5E" stopOpacity={0}/>
+                             <stop offset="5%" stopColor="#991B1B" stopOpacity={0.15}/>
+                             <stop offset="95%" stopColor="#991B1B" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 800}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 800}} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 700}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 700}} />
                         <Tooltip />
-                        <Area type="monotone" dataKey="enviado" stroke="#F43F5E" strokeWidth={6} fill="url(#colorArea)" dot={{ r: 8, fill: '#F43F5E', stroke: '#fff', strokeWidth: 5 }} activeDot={{ r: 11, fill: '#F43F5E', stroke: '#fff', strokeWidth: 5 }} />
+                        <Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={5} fill="url(#colorArea)" dot={{ r: 6, fill: '#991B1B', stroke: '#fff', strokeWidth: 4 }} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -335,87 +302,74 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'history' && (
-            <motion.div key="hist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
-              
-              {/* Seção Hero Consolidado solicitada */}
+            <motion.div key="hist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-14">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <StatCard 
-                  label="TAXA PROJETO" 
+                  label="TAXA GLOBAL" 
                   value={`${taxaTotalProcessamento}%`} 
                   icon={<ShieldCheck />} 
-                  gradient="from-slate-800 to-slate-950" 
-                  glowColor="rgba(0, 0, 0, 0.15)"
-                  subtitle="Eficiência Global" 
+                  gradient="from-slate-800 to-slate-900" 
+                  glowColor="rgba(0, 0, 0, 0.05)"
+                  subtitle="Eficiência Acumulada" 
                 />
                 <StatCard 
-                  label="HISTÓRICO" 
-                  value={totalBaseProcessada} 
+                  label="TOTAL PROCESSADO" 
+                  value={totalBaseProcessada.toLocaleString('pt-BR')} 
                   icon={<Users />} 
-                  gradient="from-slate-700 to-slate-900" 
-                  glowColor="rgba(0, 0, 0, 0.1)"
-                  subtitle="Acumulado" 
+                  gradient="from-red-800 to-red-950" 
+                  glowColor="rgba(153, 27, 27, 0.05)"
+                  subtitle="Volume Consolidado" 
                 />
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6 px-10 max-w-2xl">
-                 <Search className="text-slate-400" size={28} />
+              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 px-8 max-w-xl">
+                 <Search className="text-slate-300" size={20} />
                  <input 
                    type="text" 
-                   placeholder="Filtrar competência histórica..."
+                   placeholder="Buscar competência..."
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
-                   className="flex-1 bg-transparent border-none outline-none text-slate-900 font-bold text-xl placeholder:text-slate-300"
+                   className="flex-1 bg-transparent border-none outline-none text-slate-700 font-semibold text-lg placeholder:text-slate-300"
                  />
               </div>
               
               <div className="space-y-10">
-                {(Object.entries(groupedCalendarView) as [string, any[]][]).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).map(([year, months]) => (
+                {Object.entries(groupedCalendarView).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).map(([year, months]) => (
                   <div key={year} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
                     <button 
-                      onClick={() => toggleYear(parseInt(year))}
-                      className="w-full flex items-center justify-between px-12 py-10 hover:bg-slate-50 transition-colors"
+                      onClick={() => setExpandedYears(prev => prev.includes(parseInt(year)) ? prev.filter(y => y !== parseInt(year)) : [...prev, parseInt(year)])}
+                      className="w-full flex items-center justify-between px-10 py-8 hover:bg-slate-50 transition-colors"
                     >
-                      <div className="flex items-center gap-6">
-                         <div className="w-3 h-3 rounded-full bg-red-600 shadow-lg shadow-red-200" />
-                         <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">Ciclo Anual {year}</h3>
-                      </div>
-                      <ChevronDown size={36} className={`text-slate-300 transition-transform duration-500 ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
+                      <h3 className="text-2xl font-bold text-slate-800 tracking-tight uppercase tracking-widest">CICLO {year}</h3>
+                      <ChevronDown size={28} className={`text-slate-300 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
                       {expandedYears.includes(parseInt(year)) && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-50">
                           <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                              <thead className="bg-slate-50/50">
-                                <tr>
-                                  <th className="px-12 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Competência</th>
-                                  <th className="px-12 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Processados</th>
-                                  <th className="px-12 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                  <th className="px-12 py-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Eficiência</th>
-                                  <th className="px-12 py-8"></th>
+                              <thead>
+                                <tr className="bg-slate-50/50">
+                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Competência</th>
+                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Processados</th>
+                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Eficiência</th>
+                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
-                                {months.map((item: any) => (
-                                  <tr key={item.monthName} className={`group transition-colors ${item.status === 'Aguardando período' ? 'opacity-30' : 'hover:bg-slate-50'}`}>
-                                    <td className="px-12 py-8 font-black text-slate-900 text-xl">{item.monthName}</td>
-                                    <td className="px-12 py-8 text-center font-black text-slate-900 text-3xl">{item.enviado || 0}</td>
-                                    <td className="px-12 py-8 text-center">
-                                       <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
-                                         item.status === 'Consolidado' ? 'bg-slate-100 text-slate-600 border-slate-200' :
-                                         item.status === 'Em andamento' ? 'bg-red-50 text-red-600 border-red-100' :
-                                         'bg-transparent text-slate-400 border-slate-200'
+                                {(months as any[]).map((item: any) => (
+                                  <tr key={item.monthName} className={`transition-colors ${item.status === 'Aguardando' ? 'opacity-25' : 'hover:bg-slate-50/50'}`}>
+                                    <td className="px-10 py-6 font-bold text-slate-700 text-base">{item.monthName}</td>
+                                    <td className="px-10 py-6 text-center font-bold text-slate-900 text-lg">{item.enviado || 0}</td>
+                                    <td className="px-10 py-6 text-center font-bold text-slate-500 text-base">{item.taxaSucesso}%</td>
+                                    <td className="px-10 py-6 text-center">
+                                       <span className={`px-4 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest border ${
+                                         item.status === 'Consolidado' ? 'bg-slate-50 text-slate-500 border-slate-100' :
+                                         item.status === 'Em andamento' ? 'bg-red-50 text-red-700 border-red-100' : 'text-slate-300 border-transparent'
                                        }`}>
                                          {item.status}
                                        </span>
-                                    </td>
-                                    <td className="px-12 py-8 text-center font-black text-slate-500 text-xl">{item.taxaSucesso}%</td>
-                                    <td className="px-12 py-8 text-right">
-                                       <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          {item.status === 'Consolidado' && <button className="p-3.5 text-slate-300 hover:text-red-600 transition-colors"><Download size={24}/></button>}
-                                          {item.id && item.id !== 'current' && <button onClick={() => setHistory(history.filter(h => h.id !== item.id))} className="p-3.5 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={24}/></button>}
-                                       </div>
                                     </td>
                                   </tr>
                                 ))}
@@ -432,57 +386,55 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'new' && (
-            <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto w-full">
-              <div className="bg-white rounded-[4rem] shadow-sm border border-slate-100 overflow-hidden">
-                <div className="bg-slate-950 p-14 sm:p-20 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-red-600/10 blur-[120px] rounded-full" />
-                  <h3 className="text-5xl sm:text-6xl font-black mb-8 flex items-center gap-6">Sincronizar Dados <Wand2 className="text-red-600" /></h3>
-                  <p className="text-slate-400 text-xl font-medium leading-relaxed max-w-2xl">
-                    Utilize a extração inteligente colando o relatório textual ou arrastando uma imagem de status. A plataforma processará os números instantaneamente.
+            <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div className="bg-slate-900 p-12 sm:p-16 text-white relative">
+                  <h3 className="text-4xl font-bold mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
+                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">
+                    Sincronize os dados colando o relatório ou processando uma captura de tela com IA.
                   </p>
                 </div>
                 
-                <div className="p-14 sm:p-20 space-y-16">
-                  <div className="space-y-8">
-                    <label className="text-[12px] font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600"><ClipboardPaste size={20} /></div>
-                       Caixa Inteligente de Dados Brutos
+                <div className="p-12 sm:p-16 space-y-14">
+                  <div className="space-y-5">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-4">
+                       <ClipboardPaste size={18} /> Relatório de Texto
                     </label>
                     <textarea 
-                      placeholder="Cole aqui o texto do relatório diário..."
+                      placeholder="Cole o relatório extraído do sistema..."
                       value={smartPasteText}
                       onChange={(e) => handleSmartPasteChange(e.target.value)}
-                      className="w-full h-52 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-10 text-xl font-semibold text-slate-700 outline-none focus:border-red-600/30 focus:bg-white transition-all resize-none shadow-inner placeholder:text-slate-300"
+                      className="w-full h-44 bg-slate-50 border border-slate-200 rounded-3xl p-8 text-base font-medium text-slate-700 outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300"
                     />
                   </div>
 
-                  <form onSubmit={(e) => { e.preventDefault(); setActiveTab('dashboard'); }} className="space-y-16">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
+                  <form onSubmit={(e) => { e.preventDefault(); setActiveTab('dashboard'); }} className="space-y-14">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                       {[
-                        { id: 'enviado', label: 'SUCESSO: ENVIADOS', color: 'focus:ring-rose-500' },
-                        { id: 'naoWhatsapp', label: 'INVÁLIDOS: NÃO WHATSAPP', color: 'focus:ring-slate-950' },
-                        { id: 'semNumero', label: 'OMISSÃO: SEM NÚMERO', color: 'focus:ring-slate-400' },
-                        { id: 'paraEnviar', label: 'LOGÍSTICA: PENDENTE', color: 'focus:ring-blue-600' }
+                        { id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' },
+                        { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' },
+                        { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' },
+                        { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }
                       ].map((field) => (
-                        <div key={field.id} className="space-y-5">
-                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">{field.label}</label>
+                        <div key={field.id} className="space-y-4">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
                           <input 
                             type="number" 
                             value={(currentMonth as any)[field.id]}
                             onChange={e => updateCurrentData({ [field.id]: e.target.value })}
-                            className={`w-full bg-slate-50 border border-slate-200 rounded-3xl px-10 py-8 text-5xl font-black text-slate-900 outline-none focus:bg-white focus:ring-12 ${field.color}/5 transition-all shadow-sm`}
+                            className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-slate-800 outline-none transition-all ${field.color}`}
                           />
                         </div>
                       ))}
                     </div>
                     
-                    <div className="pt-16 flex flex-col lg:flex-row items-center justify-between gap-16 border-t border-slate-100">
-                      <div className="text-center lg:text-left">
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">Total Consolidado da Competência</p>
-                        <span className="text-8xl font-black text-slate-950 leading-none tracking-tighter">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                    <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-50">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Detectado</p>
+                        <span className="text-5xl font-bold text-slate-900 leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
-                      <button type="submit" className="w-full lg:w-auto premium-red-gradient text-white px-20 py-8 rounded-[2.5rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-6 transition-all hover:-translate-y-2 hover:shadow-2xl">
-                        FINALIZAR MONITORAMENTO <ChevronRight size={28} />
+                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-bold text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
+                        Confirmar e Atualizar <ChevronRight size={22} />
                       </button>
                     </div>
                   </form>
@@ -492,47 +444,53 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <footer className="mt-24 pb-20 pt-12 border-t border-slate-100 text-slate-400 text-[12px] font-bold uppercase tracking-[0.4em] flex flex-col sm:flex-row items-center justify-between gap-8">
+        <footer className="mt-24 pb-12 pt-10 border-t border-slate-100 text-slate-300 text-[10px] font-bold uppercase tracking-[0.3em] flex flex-col sm:flex-row items-center justify-between gap-6">
            <div className="flex items-center gap-5">
-              <div className="w-3 h-3 rounded-full bg-red-600 animate-pulse shadow-lg" />
-              <span>RedMaxx SEMASC Architecture • 2026</span>
+              <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]" />
+              <span>RedMaxx SEMASC • Protocolo 2026</span>
            </div>
-           <div className="flex items-center gap-12">
-              <span className="flex items-center gap-3"><ShieldCheck size={18}/> Protocolo de Dados Ativo</span>
-              <span className="flex items-center gap-3"><Zap size={18}/> Gemini AI Core v9.1</span>
+           <div className="flex items-center gap-10">
+              <span className="flex items-center gap-3"><ShieldCheck size={16}/> Criptografia Militar</span>
+              <span className="flex items-center gap-3"><Zap size={16}/> Gemini Elite v9.1</span>
            </div>
         </footer>
       </main>
 
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-slate-100 px-10 py-6 flex items-center justify-between z-50 shadow-[0_-15px_40px_rgba(0,0,0,0.04)] rounded-t-[3rem]">
-        {[
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'history', label: 'Histórico', icon: Calendar },
-          { id: 'new', label: 'Monitor', icon: Plus }
-        ].map((item) => (
-          <button 
-            key={item.id}
-            onClick={() => setActiveTab(item.id as any)}
-            className={`flex flex-col items-center gap-3 transition-all duration-300 ${activeTab === item.id ? 'text-red-700' : 'text-slate-400'}`}
-          >
-            <div className={`p-4 rounded-[1.5rem] transition-all duration-300 ${activeTab === item.id ? 'bg-red-50 shadow-inner scale-110' : ''}`}>
-               <item.icon size={26} strokeWidth={activeTab === item.id ? 3 : 2} />
-            </div>
-            <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[85%] max-w-[380px] z-50">
+        <nav className="bg-white/80 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] px-3 py-3 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+          {[
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'history', label: 'Ciclos', icon: Calendar },
+            { id: 'new', label: 'Add', icon: Plus }
+          ].map((item) => (
+            <button 
+              key={item.id}
+              onClick={() => setActiveTab(item.id as any)}
+              className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              {activeTab === item.id && (
+                <span className="text-[11px] font-bold uppercase tracking-tight whitespace-nowrap">{item.label}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       <AnimatePresence>
         {isProcessing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-950/60 backdrop-blur-3xl z-[100] flex items-center justify-center p-10">
-            <div className="bg-white rounded-[5rem] p-20 text-center shadow-2xl max-w-md w-full">
-              <div className="relative w-28 h-28 mx-auto mb-10">
-                <Loader2 className="w-full h-full text-red-600 animate-spin" />
-                <Zap className="absolute inset-0 m-auto w-8 h-8 text-slate-950 fill-slate-950" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-8">
+            <div className="bg-white rounded-[3rem] p-14 text-center shadow-[0_30px_100px_rgba(0,0,0,0.3)] max-w-sm w-full">
+              <div className="relative mb-10">
+                <Loader2 className="w-16 h-16 text-red-700 animate-spin mx-auto" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 bg-red-100 rounded-full" />
+                </div>
               </div>
-              <h3 className="text-3xl font-black tracking-tighter text-slate-950 mb-4">Sincronizando Base</h3>
-              <p className="text-slate-400 text-[11px] font-black uppercase tracking-[0.3em]">IA Processando Status</p>
+              <h3 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Extraindo Dados</h3>
+              <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest leading-relaxed">
+                Analisando imagem com inteligência artificial de alto desempenho
+              </p>
             </div>
           </motion.div>
         )}

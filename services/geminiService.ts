@@ -16,15 +16,15 @@ export const extractDataFromImage = async (base64Image: string): Promise<any> =>
           },
         },
         {
-          text: `Extraia os números desta imagem de status de envio. 
-          Procure pelos seguintes campos: 
-          - 'Mensagens Enviadas' ou 'Enviado'
-          - 'Contatos Não São WhatsApp' ou 'Não é WhatsApp'
-          - 'Cadastros Sem Número' ou 'Sem Número'
-          - 'Itens Para Enviar' ou 'Para Enviar'
+          text: `Extraia os números desta imagem de status de envio da plataforma de mensagens. 
+          Procure pelos seguintes campos e mapeie para as chaves correspondentes: 
+          - 'Mensagens Enviadas' ou 'Mensagens Recebidas' ou 'Sucesso' -> enviado
+          - 'Contatos Não São WhatsApp' ou 'Inválidos' -> naoWhatsapp
+          - 'Contatos Sem Número' ou 'Cadastros Sem Número' -> semNumero
+          - 'Para Enviar' ou 'Fila de Espera' -> paraEnviar
           - O período de datas mencionado (ex: 02/01/26 a 19/01/26)
 
-          Retorne no formato JSON.`
+          Retorne no formato JSON rigoroso.`
         }
       ]
     },
@@ -33,9 +33,9 @@ export const extractDataFromImage = async (base64Image: string): Promise<any> =>
       responseSchema: {
         type: Type.OBJECT,
         properties: {
-          enviado: { type: Type.NUMBER, description: "Número de mensagens enviadas" },
+          enviado: { type: Type.NUMBER, description: "Número de mensagens recebidas/enviadas" },
           naoWhatsapp: { type: Type.NUMBER, description: "Número de contatos que não são WhatsApp" },
-          semNumero: { type: Type.NUMBER, description: "Número de cadastros sem número" },
+          semNumero: { type: Type.NUMBER, description: "Número de contatos sem número" },
           paraEnviar: { type: Type.NUMBER, description: "Itens pendentes para enviar" },
           periodo: { type: Type.STRING, description: "O intervalo de datas encontrado" },
         },

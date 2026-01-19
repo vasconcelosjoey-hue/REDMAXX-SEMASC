@@ -11,28 +11,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
-        --brand-red: #B91C1C;
-        --brand-dark: #7F1D1D;
+        --brand-red: #991B1B;
+        --brand-dark: #450A0A;
       }
       body { 
         font-family: 'Plus Jakarta Sans', sans-serif; 
-        background-color: #fcfcfd;
+        background-color: #f8fafc;
         overflow-x: hidden;
       }
       .premium-red-gradient {
-        background: linear-gradient(145deg, #B91C1C, #991B1B);
-        box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 10px 25px -5px rgba(185,28,28,0.4);
+        background: linear-gradient(135deg, #991B1B 0%, #7F1D1D 100%);
       }
       .mesh-bg {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
         background-image: 
-          radial-gradient(at 0% 0%, hsla(0,100%,95%,1) 0, transparent 50%), 
-          radial-gradient(at 50% 0%, hsla(0,0%,98%,1) 0, transparent 50%),
-          radial-gradient(at 100% 0%, hsla(0,100%,96%,1) 0, transparent 50%);
+          radial-gradient(at 0% 0%, hsla(0,100%,98%,1) 0, transparent 50%), 
+          radial-gradient(at 50% 0%, hsla(210,40%,98%,1) 0, transparent 50%),
+          radial-gradient(at 100% 0%, hsla(0,100%,97%,1) 0, transparent 50%);
         z-index: -1;
       }
-      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar { width: 5px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
