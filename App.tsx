@@ -413,7 +413,13 @@ const App: React.FC = () => {
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-4"><ClipboardPaste size={18} /> Relatório de Texto</label>
                     <textarea placeholder="Cole o relatório extraído do sistema..." value={smartPasteText} onChange={(e) => handleSmartPasteChange(e.target.value)} className="w-full h-44 bg-slate-50 border border-slate-200 rounded-3xl p-8 text-base font-medium text-slate-700 outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" />
                   </div>
-                  <form onSubmit={(e) => { e.preventDefault(); setActiveTab('dashboard'); }} className="space-y-14">
+                  <form 
+                    onSubmit={(e) => { 
+                      e.preventDefault(); 
+                      requestAuthorization("Atualizar Monitoramento", () => setActiveTab('dashboard')); 
+                    }} 
+                    className="space-y-14"
+                  >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                       {[{ id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' }, { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' }, { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' }, { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }].map((field) => (
                         <div key={field.id} className="space-y-4">
