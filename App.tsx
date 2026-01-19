@@ -6,11 +6,9 @@ import {
   PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import { 
-  Plus, Upload, Trash2, Search, Download,
-  Send, Smartphone, Users, Clock, History, LayoutDashboard,
-  Loader2, AlertCircle, CheckCircle2, ChevronRight, ClipboardPaste,
-  ShieldCheck, ArrowUpRight, Maximize2, FileText, Sparkles, Zap,
-  Menu, X, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal,
+  Plus, Trash2, Search, Users, LayoutDashboard,
+  Loader2, ChevronRight, ClipboardPaste,
+  ShieldCheck, Zap, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal,
   ShieldAlert, KeyRound
 } from 'lucide-react';
 import { MonthlyStats } from './types.ts';
@@ -35,6 +33,8 @@ const MiniStatusCard: React.FC<{ label: string; value: number; color: string; ic
 );
 
 const App: React.FC = () => {
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initProgress, setInitProgress] = useState(0);
   const [history, setHistory] = useState<MonthlyStats[]>([]);
   const [expandedYears, setExpandedYears] = useState<number[]>([2026, 2025]);
   const [smartPasteText, setSmartPasteText] = useState('');
@@ -63,6 +63,18 @@ const App: React.FC = () => {
   const TOTAL_BASE_IDENTIFICADA = 7439;
 
   useEffect(() => {
+    // Simulação de inicialização com progresso
+    const interval = setInterval(() => {
+      setInitProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsInitializing(false), 500);
+          return 100;
+        }
+        return prev + 5;
+      });
+    }, 50);
+
     const savedHistory = localStorage.getItem('redmaxx_v11_history');
     const savedCurrent = localStorage.getItem('redmaxx_v11_current');
     
@@ -78,6 +90,8 @@ const App: React.FC = () => {
       ];
       setHistory(initialHistory);
     }
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -263,6 +277,45 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+      
+      {/* SPLASH SCREEN */}
+      <AnimatePresence>
+        {isInitializing && (
+          <motion.div 
+            initial={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center p-8 overflow-hidden"
+          >
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative mb-12"
+            >
+              <div className="absolute inset-0 bg-red-600/20 blur-[100px] rounded-full" />
+              <img src={LOGO_URL} alt="RedMaxx Logo" className="h-48 w-auto relative z-10 drop-shadow-2xl" />
+            </motion.div>
+            
+            <div className="w-full max-w-xs h-1.5 bg-white/5 rounded-full overflow-hidden relative">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${initProgress}%` }}
+                className="absolute inset-y-0 left-0 premium-red-gradient"
+              />
+            </div>
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em] flex items-center gap-3"
+            >
+              <Zap size={14} className="text-red-600" /> Sincronizando Sistemas
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <aside className="hidden md:flex w-64 premium-red-gradient flex-col p-6 sticky top-0 h-screen z-30 shadow-2xl shrink-0">
         {sidebarContent}
       </aside>
@@ -476,7 +529,7 @@ const App: React.FC = () => {
         </nav>
       </div>
 
-      {/* MODAL DE AUTENTICAÇÃO FUTURISTA */}
+      {/* MODAL DE AUTENTICAÇÃO */}
       <AnimatePresence>
         {isAuthOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[100] flex items-center justify-center p-8">
