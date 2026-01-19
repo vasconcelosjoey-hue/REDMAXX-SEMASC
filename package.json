@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "recharts": "2.15.0",
+    "recharts": "2.12.7",
     "lucide-react": "0.462.0",
     "framer-motion": "11.11.17",
     "@google/genai": "1.37.0",
