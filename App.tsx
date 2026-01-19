@@ -19,7 +19,8 @@ import './firebase.ts';
 
 const CHART_PALETTE = ['#991B1B', '#1E293B', '#64748B', '#94A3B8'];
 
-const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/RELAT%C3%93RIO%20SEMASC.png?alt=media&token=d51423a5-76ff-4f03-bb36-6c9865f3641e";
+// URL da logo atualizada com o novo token fornecido
+const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/RELAT%C3%93RIO%20SEMASC.png?alt=media&token=335f2853-0e57-48a2-81e9-2b4b077cde0a";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode }> = ({ label, value, color, icon }) => (
   <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200">
@@ -178,19 +179,31 @@ const App: React.FC = () => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full py-2">
-      {/* CONTAINER DA LOGO FUTURISTA (CYBER-POD) */}
+      {/* CONTAINER DA LOGO FUTURISTA (CYBER-POD) COM CARD BRANCO E DESIGN AVANÇADO */}
       <div className="relative mb-16 p-2">
-        <div className="absolute inset-0 bg-white/95 rounded-[2rem] transform -rotate-2 skew-x-1 shadow-[0_20px_40px_rgba(0,0,0,0.4)]" />
+        {/* Background base com angulação e sombra profunda */}
+        <div className="absolute inset-0 bg-white/98 rounded-[2rem] transform -rotate-3 skew-x-1 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white" />
+        
+        {/* Camada de vidro e tecnologia interna */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-slate-100 rounded-[2rem] border-2 border-white/50 shadow-inner overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '10px 10px' }} />
-          <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-red-600/20 rounded-tl-md" />
-          <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-red-600/20 rounded-br-md" />
+          {/* Grid de tecnologia microscópico */}
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 0)', backgroundSize: '12px 12px' }} />
+          
+          {/* Cantos cibernéticos decorativos */}
+          <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-red-600/30 rounded-tl-lg" />
+          <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-red-600/30 rounded-br-lg" />
+          <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-red-600/20 rounded-full" />
+          <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-red-600/20 rounded-full" />
         </div>
-        <div className="relative z-10 flex justify-center py-8 px-4">
-          <img 
+
+        {/* Logo centralizada com efeito de flutuação */}
+        <div className="relative z-10 flex justify-center py-10 px-4">
+          <motion.img 
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             src={LOGO_URL} 
             alt="RedMaxx Logo" 
-            className="h-32 w-auto object-contain transition-all hover:scale-110 duration-500 drop-shadow-[0_4px_6px_rgba(0,0,0,0.1)]" 
+            className="h-32 w-auto object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.15)] filter brightness-110" 
           />
         </div>
       </div>
