@@ -12,10 +12,10 @@ import {
   ShieldCheck, ArrowUpRight, Maximize2, FileText, Sparkles, Zap,
   Menu, X, Lock, Play, Calendar, ChevronDown, Wand2
 } from 'lucide-react';
-import { MonthlyStats } from './types';
-import { extractDataFromImage } from './services/geminiService';
-import StatCard from './components/StatCard';
-import './firebase'; // Initialize firebase
+import { MonthlyStats } from './types.ts';
+import { extractDataFromImage } from './services/geminiService.ts';
+import StatCard from './components/StatCard.tsx';
+import './firebase.ts'; // Initialize firebase
 
 const CHART_PALETTE = ['#F43F5E', '#0F172A', '#64748B', '#CBD5E1'];
 
@@ -58,8 +58,8 @@ const App: React.FC = () => {
   const TOTAL_BASE_IDENTIFICADA = 7439;
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('redmaxx_v9_history');
-    const savedCurrent = localStorage.getItem('redmaxx_v9_current');
+    const savedHistory = localStorage.getItem('redmaxx_v10_history');
+    const savedCurrent = localStorage.getItem('redmaxx_v10_current');
     
     if (savedHistory && savedCurrent) {
       setHistory(JSON.parse(savedHistory));
@@ -76,8 +76,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('redmaxx_v9_history', JSON.stringify(history));
-    localStorage.setItem('redmaxx_v9_current', JSON.stringify(currentMonth));
+    localStorage.setItem('redmaxx_v10_history', JSON.stringify(history));
+    localStorage.setItem('redmaxx_v10_current', JSON.stringify(currentMonth));
   }, [history, currentMonth]);
 
   const updateCurrentData = (data: Partial<MonthlyStats>) => {
