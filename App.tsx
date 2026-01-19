@@ -267,20 +267,26 @@ const App: React.FC = () => {
         {sidebarContent}
       </aside>
 
-      <main className="flex-1 min-w-0 p-5 sm:p-10 lg:p-14 mb-20 md:mb-0">
-        <header className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-14">
-          <div className="text-center sm:text-left">
+      <main className="flex-1 min-w-0 p-5 sm:p-8 lg:p-10 mb-10 md:mb-0">
+        <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
+          <div className="text-left">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
             <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight">
-              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Monitoramento'}
+              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Lançamento'}
             </h2>
           </div>
           
           <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm pr-8 shrink-0">
-             <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg"><Users size={20} /></div>
+             <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
+                {activeTab === 'history' ? <Users size={20} /> : <Calendar size={20} />}
+             </div>
              <div>
-               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">Base Total Ativa</p>
-               <p className="text-2xl font-bold text-slate-900 leading-none">{TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR')}</p>
+               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">
+                  {activeTab === 'history' ? 'Base Total Ativa' : `Base de ${currentMonth.monthName.split('/')[0]}`}
+               </p>
+               <p className="text-2xl font-bold text-slate-900 leading-none">
+                  {activeTab === 'history' ? TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR') : currentMonth.totalProcessado.toLocaleString('pt-BR')}
+               </p>
              </div>
           </div>
         </header>
@@ -444,28 +450,27 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <footer className="mt-24 pb-12 pt-10 border-t border-slate-100 text-slate-300 text-[10px] font-bold uppercase tracking-[0.3em] flex flex-col sm:flex-row items-center justify-between gap-6">
-           <div className="flex items-center gap-5">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]" />
-              <span>RedMaxx SEMASC • Protocolo 2026</span>
-           </div>
-           <div className="flex items-center gap-10">
-              <span className="flex items-center gap-3"><ShieldCheck size={16}/> Criptografia Militar</span>
-              <span className="flex items-center gap-3"><Zap size={16}/> Gemini Elite v9.1</span>
-           </div>
+        <footer className="mt-20 pb-8 pt-8 border-t border-slate-100 flex items-center justify-center gap-4">
+           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">Powered by</span>
+           <motion.img 
+            src={LOGO_URL} 
+            alt="RedMaxx Logo" 
+            className="h-6 w-auto object-contain opacity-40 filter grayscale hover:grayscale-0 hover:opacity-100 transition-all" 
+          />
         </footer>
       </main>
 
-      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[85%] max-w-[380px] z-50">
-        <nav className="bg-white/80 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] px-3 py-3 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+      {/* MENU MOBILE COMPACTO */}
+      <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] z-50">
+        <nav className="bg-white/90 backdrop-blur-2xl border border-white/50 rounded-[2rem] px-2 py-1.5 flex items-center justify-around shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
           {[
-            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'dashboard', label: 'Monitor', icon: LayoutDashboard },
             { id: 'history', label: 'Ciclos', icon: Calendar },
             { id: 'new', label: 'Add', icon: Plus }
           ].map((item) => (
-            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:text-slate-600'}`}>
-              <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-              {activeTab === item.id && <span className="text-[11px] font-bold uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
+            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-2 px-4 py-2.5 rounded-[1.5rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-lg' : 'text-slate-400'}`}>
+              <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              {activeTab === item.id && <span className="text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
             </button>
           ))}
         </nav>
