@@ -9,6 +9,7 @@ export interface MonthlyStats {
   totalProcessado: number; // Sum of the above
   taxaSucesso: number; // % logic from user doc
   isClosed: boolean;
+  customText?: string; // Texto personalizado para a conclusão do relatório
 }
 
 export interface DeliveryRecord extends MonthlyStats {
