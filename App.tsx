@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
@@ -9,7 +9,7 @@ import {
   Plus, Trash2, Search, Users, LayoutDashboard,
   Loader2, ChevronRight, ClipboardPaste,
   ShieldCheck, Zap, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal,
-  ShieldAlert, KeyRound, Pencil
+  ShieldAlert, KeyRound, Pencil, Image as ImageIcon, CheckCircle2
 } from 'lucide-react';
 import { MonthlyStats } from './types.ts';
 import { extractDataFromImage } from './services/geminiService.ts';
@@ -44,6 +44,8 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<MonthlyStats[]>([]);
   const [expandedYears, setExpandedYears] = useState<number[]>([2026, 2025]);
   const [smartPasteText, setSmartPasteText] = useState('');
+  const [lastProcessedType, setLastProcessedType] = useState<'text' | 'image' | null>(null);
+  
   const [currentMonth, setCurrentMonth] = useState<MonthlyStats>({
     id: 'current',
     monthName: 'Janeiro/2026',
@@ -67,6 +69,7 @@ const App: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<{ fn: () => void; label: string } | null>(null);
 
   const TOTAL_BASE_IDENTIFICADA = 7439;
+  const pasteAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -129,6 +132,7 @@ const App: React.FC = () => {
   };
 
   const updateCurrentData = (data: Partial<MonthlyStats>) => {
+    // A lógica aqui substitui o valor (substituir, não somar)
     const updated = { ...currentMonth, ...data };
     const enviado = Number(updated.enviado) || 0;
     const naoWhatsapp = Number(updated.naoWhatsapp) || 0;
@@ -145,16 +149,20 @@ const App: React.FC = () => {
       const match = text.match(pattern);
       return match ? parseInt(match[1].replace(/\D/g, '')) : null;
     };
-    const enviado = parseNumber(/(?:enviado|sucesso|enviados|recebidas)[:\s-]*([\d.,]+)/i);
-    const naoWhatsapp = parseNumber(/(?:não.*whatsapp|inválidos|invalido)[:\s-]*([\d.,]+)/i);
-    const semNumero = parseNumber(/(?:sem.*número|cadastros.*sem|omisso)[:\s-]*([\d.,]+)/i);
-    const paraEnviar = parseNumber(/(?:para.*enviar|pendente|fila)[:\s-]*([\d.,]+)/i);
-    const updates: Partial<MonthlyStats> = {};
-    if (enviado !== null) updates.enviado = enviado;
-    if (naoWhatsapp !== null) updates.naoWhatsapp = naoWhatsapp;
-    if (semNumero !== null) updates.semNumero = semNumero;
-    if (paraEnviar !== null) updates.paraEnviar = paraEnviar;
-    if (Object.keys(updates).length > 0) updateCurrentData(updates);
+    const enviado = parseNumber(/(?:enviado|sucesso|enviados|recebidas|mensagens recebidas)[:\s-]*([\d.,]+)/i);
+    const naoWhatsapp = parseNumber(/(?:não.*whatsapp|inválidos|invalido|contatos não são whatsapp)[:\s-]*([\d.,]+)/i);
+    const semNumero = parseNumber(/(?:sem.*número|cadastros.*sem|omisso|contatos sem número)[:\s-]*([\d.,]+)/i);
+    const paraEnviar = parseNumber(/(?:para.*enviar|pendente|fila|para enviar)[:\s-]*([\d.,]+)/i);
+    
+    if (enviado !== null || naoWhatsapp !== null || semNumero !== null || paraEnviar !== null) {
+      setLastProcessedType('text');
+      updateCurrentData({
+        enviado: enviado !== null ? enviado : currentMonth.enviado,
+        naoWhatsapp: naoWhatsapp !== null ? naoWhatsapp : currentMonth.naoWhatsapp,
+        semNumero: semNumero !== null ? semNumero : currentMonth.semNumero,
+        paraEnviar: paraEnviar !== null ? paraEnviar : currentMonth.paraEnviar
+      });
+    }
   };
 
   const processImageFile = async (file: File) => {
@@ -164,6 +172,8 @@ const App: React.FC = () => {
       const base64 = (reader.result as string).split(',')[1];
       try {
         const extracted = await extractDataFromImage(base64);
+        setLastProcessedType('image');
+        // Substituição direta dos valores encontrados na imagem
         updateCurrentData({
           enviado: extracted.enviado || 0,
           naoWhatsapp: extracted.naoWhatsapp || 0,
@@ -180,12 +190,20 @@ const App: React.FC = () => {
     const handlePaste = (event: ClipboardEvent) => {
       const items = event.clipboardData?.items;
       if (!items) return;
+      
+      let imageFound = false;
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
           const file = items[i].getAsFile();
-          if (file) processImageFile(file);
+          if (file) {
+            processImageFile(file);
+            imageFound = true;
+          }
         }
       }
+      
+      // Se for apenas texto e não estivermos no textarea de lançamento, processa globalmente se desejado
+      // Mas a regra agora é focar na aba de lançamento
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
@@ -478,13 +496,44 @@ const App: React.FC = () => {
               <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden">
                 <div className="bg-slate-900 p-12 sm:p-16 text-white relative">
                   <h3 className="text-4xl font-bold mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
-                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">Sincronize os dados colando o relatório ou processando uma captura de tela com IA.</p>
+                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">
+                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela diretamente do clipboard.
+                  </p>
                 </div>
                 <div className="p-12 sm:p-16 space-y-14">
-                  <div className="space-y-5">
-                    <label className="text-[11px] font-extrabold text-black uppercase tracking-widest flex items-center gap-4"><ClipboardPaste size={18} /> Relatório de Texto</label>
-                    <textarea placeholder="Cole o relatório extraído do sistema..." value={smartPasteText} onChange={(e) => handleSmartPasteChange(e.target.value)} className="w-full h-44 bg-slate-50 border border-slate-200 rounded-3xl p-8 text-base font-medium text-black outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" />
+                  <div className="space-y-5 relative">
+                    <div className="flex items-center justify-between mb-2">
+                       <label className="text-[11px] font-extrabold text-black uppercase tracking-widest flex items-center gap-4">
+                          <ClipboardPaste size={18} /> Zona de Colagem (Ctrl+V)
+                       </label>
+                       {lastProcessedType && (
+                         <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-2">
+                            <CheckCircle2 size={12} /> Valores atualizados via {lastProcessedType === 'image' ? 'Imagem' : 'Texto'}
+                         </motion.span>
+                       )}
+                    </div>
+                    
+                    <div className="relative group">
+                      <textarea 
+                        ref={pasteAreaRef}
+                        placeholder="Cole o relatório de texto aqui ou apenas Ctrl+V se tiver copiado uma imagem..." 
+                        value={smartPasteText} 
+                        onChange={(e) => handleSmartPasteChange(e.target.value)} 
+                        className="w-full h-56 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-base font-medium text-black outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" 
+                      />
+                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="flex items-center gap-3 text-slate-300">
+                            <ImageIcon size={40} />
+                            <MessageSquare size={40} />
+                         </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center mt-4">
+                       Dica: Copie o status da plataforma e cole aqui. Os valores serão substituídos automaticamente.
+                    </p>
                   </div>
+
                   <form 
                     onSubmit={(e) => { 
                       e.preventDefault(); 
@@ -493,16 +542,27 @@ const App: React.FC = () => {
                     className="space-y-14"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                      {[{ id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' }, { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' }, { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' }, { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }].map((field) => (
+                      {[
+                        { id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' }, 
+                        { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' }, 
+                        { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' }, 
+                        { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }
+                      ].map((field) => (
                         <div key={field.id} className="space-y-4">
                           <label className="text-[10px] font-extrabold text-black uppercase tracking-widest ml-1">{field.label}</label>
-                          <input type="number" value={(currentMonth as any)[field.id]} onChange={e => updateCurrentData({ [field.id]: e.target.value })} className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-black outline-none transition-all ${field.color}`} />
+                          <input 
+                            type="number" 
+                            value={(currentMonth as any)[field.id]} 
+                            onChange={e => updateCurrentData({ [field.id]: e.target.value })} 
+                            className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-black outline-none transition-all ${field.color}`} 
+                          />
                         </div>
                       ))}
                     </div>
+                    
                     <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-50">
                       <div>
-                        <p className="text-[10px] font-extrabold text-black uppercase tracking-widest mb-2">Total Detectado</p>
+                        <p className="text-[10px] font-extrabold text-black uppercase tracking-widest mb-2">Total Consolidado</p>
                         <span className="text-5xl font-bold text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
                       <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-bold text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
