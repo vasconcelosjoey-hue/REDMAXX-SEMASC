@@ -34,12 +34,12 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon, gradient, glowC
       </div>
 
       <div className="relative z-10">
-        <h3 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight leading-none mb-2">
+        <h3 className="text-4xl sm:text-5xl font-bold text-black tracking-tight leading-none mb-2">
           {value}
         </h3>
         <div className="mt-1">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] leading-tight mb-1">{label}</p>
-          {subtitle && <p className="text-[10px] text-slate-400 font-medium tracking-tight">{subtitle}</p>}
+          <p className="text-[10px] font-extrabold text-black uppercase tracking-[0.15em] leading-tight mb-1">{label}</p>
+          {subtitle && <p className="text-[10px] text-black font-semibold tracking-tight">{subtitle}</p>}
         </div>
       </div>
     </motion.div>

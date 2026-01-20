@@ -9,7 +9,7 @@ import {
   Plus, Trash2, Search, Users, LayoutDashboard,
   Loader2, ChevronRight, ClipboardPaste,
   ShieldCheck, Zap, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal,
-  ShieldAlert, KeyRound
+  ShieldAlert, KeyRound, Pencil
 } from 'lucide-react';
 import { MonthlyStats } from './types.ts';
 import { extractDataFromImage } from './services/geminiService.ts';
@@ -20,15 +20,21 @@ const CHART_PALETTE = ['#991B1B', '#1E293B', '#64748B', '#94A3B8'];
 const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/RELAT%C3%93RIO%20SEMASC.png?alt=media&token=335f2853-0e57-48a2-81e9-2b4b077cde0a";
 const AUTH_PASSWORD = "semascmanaus123";
 
-const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode }> = ({ label, value, color, icon }) => (
-  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200">
+const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode; onEdit?: () => void }> = ({ label, value, color, icon, onEdit }) => (
+  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 relative group/card">
     <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center text-white shadow-md shrink-0`}>
       {React.cloneElement(icon as React.ReactElement, { size: 18 })}
     </div>
-    <div className="min-w-0">
-      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">{label}</p>
-      <p className="text-xl font-bold text-slate-900 leading-none">{value.toLocaleString('pt-BR')}</p>
+    <div className="min-w-0 flex-1">
+      <p className="text-[9px] font-extrabold text-black uppercase tracking-wider mb-0.5 truncate">{label}</p>
+      <p className="text-xl font-bold text-black leading-none">{value.toLocaleString('pt-BR')}</p>
     </div>
+    <button 
+      onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
+      className="p-2 rounded-lg text-slate-300 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
+    >
+      <Pencil size={14} />
+    </button>
   </div>
 );
 
@@ -63,7 +69,6 @@ const App: React.FC = () => {
   const TOTAL_BASE_IDENTIFICADA = 7439;
 
   useEffect(() => {
-    // Simulação de inicialização com progresso
     const interval = setInterval(() => {
       setInitProgress(prev => {
         if (prev >= 100) {
@@ -323,24 +328,32 @@ const App: React.FC = () => {
       <main className="flex-1 min-w-0 p-5 sm:p-8 lg:p-10 mb-10 md:mb-0">
         <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
           <div className="text-left">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
-            <h2 className="text-4xl sm:text-5xl font-bold text-slate-900 tracking-tight">
+            <p className="text-[10px] text-black font-extrabold uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-black tracking-tight">
               {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Lançamento'}
             </h2>
           </div>
           
-          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm pr-8 shrink-0">
+          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm pr-8 shrink-0 relative group">
              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
                 {activeTab === 'history' ? <Users size={20} /> : <Calendar size={20} />}
              </div>
              <div>
-               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">
+               <p className="text-[9px] font-extrabold text-black uppercase tracking-widest leading-none mb-1.5">
                   {activeTab === 'history' ? 'Base Total Ativa' : `Base de ${currentMonth.monthName.split('/')[0]}`}
                </p>
-               <p className="text-2xl font-bold text-slate-900 leading-none">
+               <p className="text-2xl font-bold text-black leading-none">
                   {activeTab === 'history' ? TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR') : currentMonth.totalProcessado.toLocaleString('pt-BR')}
                </p>
              </div>
+             {activeTab !== 'history' && (
+               <button 
+                onClick={() => requestAuthorization("Editar Base Mensal", () => setActiveTab('new'))}
+                className="absolute -right-2 -top-2 p-2 bg-white rounded-full shadow-md border border-slate-100 text-slate-300 hover:text-red-700 transition-all opacity-0 group-hover:opacity-100"
+               >
+                 <Pencil size={12} />
+               </button>
+             )}
           </div>
         </header>
 
@@ -349,12 +362,12 @@ const App: React.FC = () => {
             <motion.div key="dash" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-12">
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
                 <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-1 flex flex-col">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-10">Distribuição Mensal</h3>
+                  <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-black mb-10">Distribuição Mensal</h3>
                   <div className="grid grid-cols-1 gap-4 mb-12">
-                    <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} />
-                    <MiniStatusCard label="Contatos Não São WhatsApp" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} />
-                    <MiniStatusCard label="Contatos Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} />
-                    <MiniStatusCard label="Para Enviar" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<SendHorizontal/>} />
+                    <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} onEdit={() => requestAuthorization("Editar Mensagens Recebidas", () => setActiveTab('new'))} />
+                    <MiniStatusCard label="Contatos Não São WhatsApp" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} onEdit={() => requestAuthorization("Editar Contatos Inválidos", () => setActiveTab('new'))} />
+                    <MiniStatusCard label="Contatos Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} onEdit={() => requestAuthorization("Editar Contatos Sem Número", () => setActiveTab('new'))} />
+                    <MiniStatusCard label="Para Enviar" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<SendHorizontal/>} onEdit={() => requestAuthorization("Editar Fila de Envio", () => setActiveTab('new'))} />
                   </div>
                   <div className="h-[260px] relative">
                     <ResponsiveContainer width="100%" height="100%">
@@ -366,13 +379,13 @@ const App: React.FC = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Taxa</span>
-                       <span className="text-3xl font-bold text-slate-900">{currentMonth.taxaSucesso}%</span>
+                       <span className="text-[9px] font-extrabold text-black uppercase tracking-widest mb-1">Taxa</span>
+                       <span className="text-3xl font-bold text-black">{currentMonth.taxaSucesso}%</span>
                     </div>
                   </div>
                 </div>
                 <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-2 flex flex-col">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-10">Evolução Histórica</h3>
+                  <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-black mb-10">Evolução Histórica</h3>
                   <div className="flex-1 min-h-[450px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={[...history].concat([currentMonth])}>
@@ -383,8 +396,8 @@ const App: React.FC = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 700}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11, fontWeight: 700}} />
+                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 800}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 800}} />
                         <Tooltip />
                         <Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={5} fill="url(#colorArea)" dot={{ r: 6, fill: '#991B1B', stroke: '#fff', strokeWidth: 4 }} />
                       </AreaChart>
@@ -409,7 +422,7 @@ const App: React.FC = () => {
                 {Object.entries(groupedCalendarView).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).map(([year, months]) => (
                   <div key={year} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
                     <button onClick={() => setExpandedYears(prev => prev.includes(parseInt(year)) ? prev.filter(y => y !== parseInt(year)) : [...prev, parseInt(year)])} className="w-full flex items-center justify-between px-10 py-8 hover:bg-slate-50 transition-colors">
-                      <h3 className="text-2xl font-bold text-slate-800 tracking-tight uppercase tracking-widest">CICLO {year}</h3>
+                      <h3 className="text-2xl font-bold text-black tracking-tight uppercase tracking-widest">CICLO {year}</h3>
                       <ChevronDown size={28} className={`text-slate-300 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
@@ -419,21 +432,21 @@ const App: React.FC = () => {
                             <table className="w-full text-left">
                               <thead>
                                 <tr className="bg-slate-50/50">
-                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Competência</th>
-                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Processados</th>
-                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Eficiência</th>
-                                  <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Ações</th>
+                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest">Competência</th>
+                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Processados</th>
+                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Eficiência</th>
+                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Ações</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
                                 {(months as any[]).map((item: any) => (
                                   <tr key={item.monthName} className={`transition-colors ${item.status === 'Aguardando' ? 'opacity-25' : 'hover:bg-slate-50/50'}`}>
-                                    <td className="px-10 py-6 font-bold text-slate-700 text-base">{item.monthName}</td>
-                                    <td className="px-10 py-6 text-center font-bold text-slate-900 text-lg">{item.enviado || 0}</td>
-                                    <td className="px-10 py-6 text-center font-bold text-slate-500 text-base">{item.taxaSucesso}%</td>
+                                    <td className="px-10 py-6 font-bold text-black text-base">{item.monthName}</td>
+                                    <td className="px-10 py-6 text-center font-bold text-black text-lg">{item.enviado || 0}</td>
+                                    <td className="px-10 py-6 text-center font-bold text-black text-base">{item.taxaSucesso}%</td>
                                     <td className="px-10 py-6 text-center">
                                        <div className="flex items-center justify-center gap-4">
-                                          <span className={`px-4 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-widest border ${item.status === 'Consolidado' ? 'bg-slate-50 text-slate-500 border-slate-100' : item.status === 'Em andamento' ? 'bg-red-50 text-red-700 border-red-100' : 'text-slate-300 border-transparent'}`}>
+                                          <span className={`px-4 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest border ${item.status === 'Consolidado' ? 'bg-slate-50 text-slate-500 border-slate-100' : item.status === 'Em andamento' ? 'bg-red-50 text-red-700 border-red-100' : 'text-slate-300 border-transparent'}`}>
                                             {item.status}
                                           </span>
                                           {item.status === 'Consolidado' && (
@@ -469,8 +482,8 @@ const App: React.FC = () => {
                 </div>
                 <div className="p-12 sm:p-16 space-y-14">
                   <div className="space-y-5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-4"><ClipboardPaste size={18} /> Relatório de Texto</label>
-                    <textarea placeholder="Cole o relatório extraído do sistema..." value={smartPasteText} onChange={(e) => handleSmartPasteChange(e.target.value)} className="w-full h-44 bg-slate-50 border border-slate-200 rounded-3xl p-8 text-base font-medium text-slate-700 outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" />
+                    <label className="text-[11px] font-extrabold text-black uppercase tracking-widest flex items-center gap-4"><ClipboardPaste size={18} /> Relatório de Texto</label>
+                    <textarea placeholder="Cole o relatório extraído do sistema..." value={smartPasteText} onChange={(e) => handleSmartPasteChange(e.target.value)} className="w-full h-44 bg-slate-50 border border-slate-200 rounded-3xl p-8 text-base font-medium text-black outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" />
                   </div>
                   <form 
                     onSubmit={(e) => { 
@@ -482,15 +495,15 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                       {[{ id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' }, { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' }, { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' }, { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }].map((field) => (
                         <div key={field.id} className="space-y-4">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
-                          <input type="number" value={(currentMonth as any)[field.id]} onChange={e => updateCurrentData({ [field.id]: e.target.value })} className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-slate-800 outline-none transition-all ${field.color}`} />
+                          <label className="text-[10px] font-extrabold text-black uppercase tracking-widest ml-1">{field.label}</label>
+                          <input type="number" value={(currentMonth as any)[field.id]} onChange={e => updateCurrentData({ [field.id]: e.target.value })} className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-black outline-none transition-all ${field.color}`} />
                         </div>
                       ))}
                     </div>
                     <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-50">
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Detectado</p>
-                        <span className="text-5xl font-bold text-slate-900 leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                        <p className="text-[10px] font-extrabold text-black uppercase tracking-widest mb-2">Total Detectado</p>
+                        <span className="text-5xl font-bold text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
                       <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-bold text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
                         Confirmar e Atualizar <ChevronRight size={22} />
@@ -504,11 +517,11 @@ const App: React.FC = () => {
         </AnimatePresence>
 
         <footer className="mt-20 pb-8 pt-8 border-t border-slate-100 flex items-center justify-center gap-4">
-           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">Powered by</span>
+           <span className="text-black text-[10px] font-extrabold uppercase tracking-[0.2em]">Powered by</span>
            <motion.img 
             src={LOGO_URL} 
             alt="RedMaxx Logo" 
-            className="h-6 w-auto object-contain opacity-40 filter grayscale hover:grayscale-0 hover:opacity-100 transition-all" 
+            className="h-6 w-auto object-contain filter grayscale hover:grayscale-0 hover:opacity-100 transition-all" 
           />
         </footer>
       </main>
@@ -545,9 +558,9 @@ const App: React.FC = () => {
                  <ShieldAlert size={48} strokeWidth={1.5} />
               </div>
 
-              <h3 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Autorização Necessária</h3>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-12">
-                COMANDO: <span className="text-slate-900">{pendingAction?.label}</span>
+              <h3 className="text-3xl font-bold text-black mb-2 tracking-tight">Autorização Necessária</h3>
+              <p className="text-black text-[10px] font-extrabold uppercase tracking-[0.2em] mb-12">
+                COMANDO: <span className="text-red-700">{pendingAction?.label}</span>
               </p>
 
               <div className="space-y-8">
@@ -562,7 +575,7 @@ const App: React.FC = () => {
                       value={authInput}
                       onChange={(e) => setAuthInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && confirmAuthorization()}
-                      className="w-full bg-transparent py-5 text-xl font-bold text-slate-900 outline-none placeholder:text-slate-200 tracking-[0.2em]"
+                      className="w-full bg-transparent py-5 text-xl font-bold text-black outline-none placeholder:text-slate-200 tracking-[0.2em]"
                     />
                   </div>
                   {authError && (
@@ -602,8 +615,8 @@ const App: React.FC = () => {
                   <div className="w-4 h-4 bg-red-100 rounded-full" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3 tracking-tight">Extraindo Dados</h3>
-              <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest leading-relaxed">Analisando imagem com inteligência artificial de alto desempenho</p>
+              <h3 className="text-2xl font-bold text-black mb-3 tracking-tight">Extraindo Dados</h3>
+              <p className="text-black text-[11px] font-extrabold uppercase tracking-widest leading-relaxed">Analisando imagem com inteligência artificial de alto desempenho</p>
             </div>
           </motion.div>
         )}
