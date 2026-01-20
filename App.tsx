@@ -23,19 +23,19 @@ const LOGO_URL_COLORED = "https://firebasestorage.googleapis.com/v0/b/redmaxx-se
 const AUTH_PASSWORD = "semascmanaus123";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode; onEdit?: () => void }> = ({ label, value, color, icon, onEdit }) => (
-  <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-slate-300 relative group/card flex-1 min-w-[200px]">
-    <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center text-white shadow-sm shrink-0`}>
-      {React.cloneElement(icon as React.ReactElement, { size: 22 })}
+  <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-slate-300 relative group/card flex-1 min-w-[280px]">
+    <div className={`w-14 h-14 rounded-xl ${color} flex items-center justify-center text-white shadow-sm shrink-0`}>
+      {React.cloneElement(icon as React.ReactElement, { size: 24 })}
     </div>
-    <div className="min-w-0 flex-1">
-      <p className="text-[12px] font-black text-black uppercase tracking-wider mb-0.5 whitespace-nowrap">{label}</p>
-      <p className="text-2xl font-black text-black leading-none">{value.toLocaleString('pt-BR')}</p>
+    <div className="flex-1">
+      <p className="text-[11px] font-black text-black uppercase tracking-wider mb-1 leading-tight break-words">{label}</p>
+      <p className="text-3xl font-black text-black leading-none">{value.toLocaleString('pt-BR')}</p>
     </div>
     <button 
       onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-      className="p-2 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
+      className="p-2 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100 shrink-0"
     >
-      <Pencil size={16} />
+      <Pencil size={18} />
     </button>
   </div>
 );
@@ -201,7 +201,7 @@ const App: React.FC = () => {
           transition={{ duration: 4, repeat: Infinity }} 
           src={LOGO_URL_WHITE} 
           alt="Logo" 
-          className="h-28 w-auto object-contain" 
+          className="h-32 w-auto object-contain" 
         />
       </div>
       <nav className="space-y-3 flex-1 pt-6 px-4">
@@ -233,7 +233,6 @@ const App: React.FC = () => {
       <aside className="hidden md:flex w-72 premium-red-gradient flex-col sticky top-0 h-screen z-30 shadow-2xl shrink-0">{sidebarContent}</aside>
 
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Header (Heading): Sem o ícone de calendário conforme solicitado */}
         <header className="premium-red-gradient px-10 py-6 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-6">
             <h2 className="text-3xl font-black text-white tracking-tighter leading-none uppercase no-wrap">
@@ -243,9 +242,8 @@ const App: React.FC = () => {
           <div className="flex items-center gap-6">
              <div className="text-right">
                <p className="text-[12px] font-black text-white/50 uppercase tracking-[0.2em] leading-none mb-1">Base Atual</p>
-               <p className="text-3xl font-black text-white leading-none tracking-tighter">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</p>
+               <p className="text-3xl font-black text-white leading-none tracking-tighter no-wrap">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</p>
              </div>
-             {/* Removido o ícone de calendário daqui */}
           </div>
         </header>
 
@@ -253,10 +251,9 @@ const App: React.FC = () => {
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
               <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
-                {/* Reorganização das estatísticas de forma LINEAR */}
                 <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-                  <h3 className="text-[13px] font-black uppercase tracking-widest text-black mb-8 border-l-4 border-red-700 pl-4">Estatísticas da Competência em Tempo Real</h3>
-                  <div className="flex flex-wrap gap-6 mb-10">
+                  <h3 className="text-[14px] font-black uppercase tracking-widest text-black mb-10 border-l-4 border-red-700 pl-4">Estatísticas da Competência em Tempo Real</h3>
+                  <div className="flex flex-wrap gap-6 mb-12">
                     <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} />
                     <MiniStatusCard label="Contatos Inválidos" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} />
                     <MiniStatusCard label="Cadastros Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} />
@@ -264,14 +261,14 @@ const App: React.FC = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col items-center justify-center h-[350px]">
+                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col items-center justify-center h-[380px]">
                       <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6">Distribuição de Status</h4>
                       <div className="w-full h-full relative">
-                        <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={pieData} innerRadius={80} outerRadius={120} paddingAngle={8} dataKey="value">{pieData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} stroke="none" />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>
+                        <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={pieData} innerRadius={80} outerRadius={130} paddingAngle={8} dataKey="value">{pieData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} stroke="none" />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Efetividade</span><span className="text-4xl font-black text-black">{currentMonth.taxaSucesso}%</span></div>
                       </div>
                     </div>
-                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col h-[350px]">
+                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col h-[380px]">
                       <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6">Tendência de Competência</h4>
                       <div className="flex-1 min-h-0">
                         <ResponsiveContainer width="100%" height="100%"><AreaChart data={[...history].concat([currentMonth])}><defs><linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#991B1B" stopOpacity={0.15}/><stop offset="95%" stopColor="#991B1B" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" /><XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 13, fontWeight: 800}} /><YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 13, fontWeight: 800}} /><Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '14px', fontWeight: 'bold', padding: '16px' }} /><Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={6} fill="url(#colorArea)" dot={{ r: 7, fill: '#991B1B', stroke: '#fff', strokeWidth: 3 }} /></AreaChart></ResponsiveContainer>
@@ -303,7 +300,7 @@ const App: React.FC = () => {
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-100">
                             <div className="overflow-x-auto"><table className="w-full text-left text-[16px]">
                               <thead><tr className="bg-slate-50/30 text-[12px] font-black text-slate-500 uppercase tracking-widest"><th className="px-12 py-6">Mês de Referência</th><th className="px-12 py-6 text-center">Processados</th><th className="px-12 py-6 text-center">Efetividade</th><th className="px-12 py-6 text-center">Status</th></tr></thead>
-                              <tbody className="divide-y divide-slate-100">{(months as any[]).map((item) => (<tr key={item.monthName} className={`hover:bg-slate-50/30 ${item.status==='Aguardando'?'opacity-30':''}`}><td className="px-12 py-6 font-black text-black no-wrap">{item.monthName}</td><td className="px-12 py-6 text-center font-bold text-slate-700">{item.enviado || 0}</td><td className="px-12 py-6 text-center font-bold text-slate-700">{item.taxaSucesso}%</td><td className="px-12 py-6 text-center"><div className="flex items-center justify-center gap-6"><span className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border ${item.status==='Consolidado'?'bg-slate-100 text-slate-800 border-slate-200':'bg-red-50 text-red-800 border-red-100'}`}>{item.status}</span>{item.status==='Consolidado' && <button onClick={()=>requestAuthorization(`Excluir Dados: ${item.monthName}`, ()=>deleteHistoryItem(item.id))} className="p-2 text-slate-300 hover:text-red-700 transition-all"><Trash2 size={22}/></button>}</div></td></tr>))}</tbody>
+                              <tbody className="divide-y divide-slate-100">{(months as any[]).map((item) => (<tr key={item.monthName} className={`hover:bg-slate-50/30 ${item.status==='Aguardando'?'opacity-30':''}`}><td className="px-12 py-6 font-black text-black no-wrap">{item.monthName}</td><td className="px-12 py-6 text-center font-bold text-slate-700 no-wrap">{item.enviado || 0}</td><td className="px-12 py-6 text-center font-bold text-slate-700 no-wrap">{item.taxaSucesso}%</td><td className="px-12 py-6 text-center"><div className="flex items-center justify-center gap-6"><span className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border ${item.status==='Consolidado'?'bg-slate-100 text-slate-800 border-slate-200':'bg-red-50 text-red-800 border-red-100'} no-wrap`}>{item.status}</span>{item.status==='Consolidado' && <button onClick={()=>requestAuthorization(`Excluir Dados: ${item.monthName}`, ()=>deleteHistoryItem(item.id))} className="p-2 text-slate-300 hover:text-red-700 transition-all"><Trash2 size={22}/></button>}</div></td></tr>))}</tbody>
                             </table></div>
                           </motion.div>
                         )}
@@ -326,7 +323,7 @@ const App: React.FC = () => {
                   </div>
                   <div className="p-12 space-y-12">
                     <form onSubmit={(e)=>{e.preventDefault();setActiveTab('dashboard');}} className="space-y-10">
-                      <div className="grid grid-cols-2 gap-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {[{id:'enviado',label:'Mensagens Recebidas'},{id:'naoWhatsapp',label:'Contatos Inválidos'},{id:'semNumero',label:'Sem Número Cadastrado'},{id:'paraEnviar',label:'Fila Pendente'}].map((f)=>(
                           <div key={f.id} className="space-y-3">
                             <label className="text-[12px] font-black text-black uppercase tracking-widest pl-2">{f.label}</label>
@@ -353,7 +350,7 @@ const App: React.FC = () => {
                       <div className="pt-10 flex items-center justify-between gap-10 border-t border-slate-100">
                         <div>
                           <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1">Base Consolidada Atual</p>
-                          <span className="text-5xl font-black text-black leading-none tracking-tighter">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                          <span className="text-5xl font-black text-black leading-none tracking-tighter no-wrap">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                         </div>
                         <button type="submit" className="premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[14px] uppercase tracking-widest flex items-center gap-4 shadow-2xl hover:brightness-110 transition-all hover:scale-[1.02]">
                           Confirmar Atualização <ChevronRight size={24}/>
@@ -368,22 +365,21 @@ const App: React.FC = () => {
             {activeTab === 'reports' && (
               <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-12 rounded-[40px] border border-slate-200 shadow-sm min-h-[600px]">
                 <h3 className="text-2xl font-black text-black mb-12 flex items-center gap-5 uppercase tracking-tighter"><FileText size={32} className="text-red-700"/> Central de Relatórios Consolidados</h3>
-                {/* Cards ajustados para mostrar NOME COMPLETO e permitir EXCLUSÃO */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {history.map((item)=>(
-                    <div key={item.id} className="p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm relative overflow-visible">
+                    <div key={item.id} className="p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm relative">
                       <div className="flex items-start gap-5 mb-6">
                         <div className="p-4 bg-white rounded-2xl text-red-700 shadow-sm shrink-0"><FileText size={26}/></div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-[18px] font-black text-black leading-tight no-wrap">{item.monthName}</h4>
-                          <p className="text-[12px] font-bold text-slate-500 uppercase mt-2">{item.enviado} envios com êxito</p>
+                        <div className="min-w-0 flex-1 pr-10">
+                          <h4 className="text-[20px] font-black text-black leading-tight no-wrap">{item.monthName}</h4>
+                          <p className="text-[12px] font-bold text-slate-500 uppercase mt-2 break-words leading-tight">{item.enviado} envios com êxito</p>
                         </div>
-                        {/* Botão de exclusão sempre visível com autorização */}
                         <button 
                           onClick={()=>requestAuthorization(`Excluir Relatório: ${item.monthName}`, ()=>deleteHistoryItem(item.id))}
-                          className="p-2 text-slate-300 hover:text-red-700 transition-all absolute top-6 right-6"
+                          className="p-2 text-slate-300 hover:text-red-700 transition-all absolute top-8 right-8 z-10"
+                          title="Excluir Relatório"
                         >
-                          <Trash2 size={20}/>
+                          <Trash2 size={24}/>
                         </button>
                       </div>
                       <button 
@@ -394,13 +390,12 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   ))}
-                  {/* Card do mês atual */}
-                  <div className="p-8 bg-red-50/20 rounded-3xl border border-red-100 transition-all group flex flex-col shadow-sm">
+                  <div className="p-8 bg-red-50/20 rounded-3xl border border-red-100 transition-all group flex flex-col shadow-sm relative">
                       <div className="flex items-start gap-5 mb-6">
                         <div className="p-4 bg-white rounded-2xl text-red-700 shadow-sm shrink-0"><FileText size={26}/></div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-[18px] font-black text-black leading-tight no-wrap">{currentMonth.monthName}</h4>
-                          <p className="text-[12px] font-bold text-red-600 uppercase mt-2">Ciclo em aberto</p>
+                          <h4 className="text-[20px] font-black text-black leading-tight no-wrap">{currentMonth.monthName}</h4>
+                          <p className="text-[12px] font-bold text-red-600 uppercase mt-2 break-words leading-tight">Ciclo em aberto</p>
                         </div>
                       </div>
                       <button 
@@ -420,12 +415,11 @@ const App: React.FC = () => {
         </div>
 
         <footer className="pb-10 pt-10 border-t border-slate-200 flex items-center justify-center gap-6">
-           <span className="text-slate-400 text-[13px] font-black uppercase tracking-[0.3em]">Powered by</span>
+           <span className="text-slate-400 text-[13px] font-black uppercase tracking-[0.3em] no-wrap">Powered by</span>
            <img src={LOGO_URL_COLORED} alt="RedMaxx Powered" className="h-10 w-auto object-contain hover:scale-105 transition-transform" />
         </footer>
       </main>
 
-      {/* Menu Mobile */}
       <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] z-50">
         <nav className="bg-white/95 backdrop-blur-2xl border border-slate-200 rounded-[32px] px-4 py-4 flex items-center justify-around shadow-2xl">
           {[{id:'dashboard',i:LayoutDashboard},{id:'history',i:Calendar},{id:'new',i:Plus},{id:'reports',i:FileText}].map((item)=>(
@@ -521,8 +515,8 @@ const App: React.FC = () => {
                       </div>
                    </div>
                    <div className="absolute bottom-16 left-20 right-20 flex justify-between items-end border-t-2 pt-12 border-slate-200 text-[13px] text-slate-400 font-black uppercase tracking-widest">
-                      <div className="space-y-2"><p className="text-slate-800 text-sm">Manaus/AM - Hub Tecnológico</p><p>R. Rio Purús, 458 | Vieiralves</p></div>
-                      <div className="space-y-2 text-right"><p className="text-slate-800 text-sm">São Paulo/SP - Regional</p><p>Av. Berrini, 1140 | Monções</p></div>
+                      <div className="space-y-2"><p className="text-slate-800 text-sm no-wrap">Manaus/AM - Hub Tecnológico</p><p className="no-wrap">R. Rio Purús, 458 | Vieiralves</p></div>
+                      <div className="space-y-2 text-right"><p className="text-slate-800 text-sm no-wrap">São Paulo/SP - Regional</p><p className="no-wrap">Av. Berrini, 1140 | Monções</p></div>
                    </div>
                 </div>
              </div>
