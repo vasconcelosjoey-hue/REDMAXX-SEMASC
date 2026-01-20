@@ -9,7 +9,7 @@ import {
   Plus, Trash2, Search, Users, LayoutDashboard,
   Loader2, ChevronRight, ClipboardPaste,
   ShieldCheck, Zap, Lock, Play, Calendar, ChevronDown, Wand2, MessageSquare, PhoneOff, UserMinus, SendHorizontal,
-  ShieldAlert, KeyRound, Pencil, Image as ImageIcon, CheckCircle2
+  ShieldAlert, KeyRound, Pencil, Image as ImageIcon, CheckCircle2, FileText, Download, Printer, X
 } from 'lucide-react';
 import { MonthlyStats } from './types.ts';
 import { extractDataFromImage } from './services/geminiService.ts';
@@ -59,8 +59,9 @@ const App: React.FC = () => {
   });
   
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'new'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'new' | 'reports'>('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
+  const [reportToPreview, setReportToPreview] = useState<MonthlyStats | null>(null);
 
   // Estados de Segurança
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -132,7 +133,6 @@ const App: React.FC = () => {
   };
 
   const updateCurrentData = (data: Partial<MonthlyStats>) => {
-    // Garantir substituição total dos campos enviados
     const updated = { ...currentMonth, ...data };
     const enviado = Number(updated.enviado) || 0;
     const naoWhatsapp = Number(updated.naoWhatsapp) || 0;
@@ -152,6 +152,39 @@ const App: React.FC = () => {
     });
   };
 
+  const closeCycleAndAdvance = () => {
+    // 1. Salva o atual no histórico
+    const closedMonth = { ...currentMonth, id: Date.now().toString(), isClosed: true };
+    setHistory(prev => [...prev, closedMonth]);
+
+    // 2. Calcula o próximo mês
+    const monthsArr = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const [month, year] = currentMonth.monthName.split('/');
+    let nextIdx = monthsArr.indexOf(month) + 1;
+    let nextYear = parseInt(year);
+    if (nextIdx > 11) {
+      nextIdx = 0;
+      nextYear++;
+    }
+    const nextMonthName = `${monthsArr[nextIdx]}/${nextYear}`;
+
+    // 3. Zera tudo
+    setCurrentMonth({
+      id: 'current',
+      monthName: nextMonthName,
+      enviado: 0,
+      naoWhatsapp: 0,
+      semNumero: 0,
+      paraEnviar: 0,
+      totalProcessado: 0,
+      taxaSucesso: 0,
+      isClosed: false
+    });
+    setSmartPasteText("");
+    setLastProcessedType(null);
+    setActiveTab('dashboard');
+  };
+
   const handleSmartPasteChange = (text: string) => {
     setSmartPasteText(text);
     const parseNumber = (pattern: RegExp) => {
@@ -164,7 +197,6 @@ const App: React.FC = () => {
     const semNumero = parseNumber(/(?:sem.*número|cadastros.*sem|omisso|contatos sem número)[:\s-]*([\d.,]+)/i);
     const paraEnviar = parseNumber(/(?:para.*enviar|pendente|fila|para enviar)[:\s-]*([\d.,]+)/i);
     
-    // Se encontrou qualquer valor, substitui os campos no formulário
     if (enviado !== null || naoWhatsapp !== null || semNumero !== null || paraEnviar !== null) {
       setLastProcessedType('text');
       updateCurrentData({
@@ -184,7 +216,6 @@ const App: React.FC = () => {
       try {
         const extracted = await extractDataFromImage(base64);
         setLastProcessedType('image');
-        // Substituição direta dos valores encontrados na imagem para os inputs
         updateCurrentData({
           enviado: extracted.enviado || 0,
           naoWhatsapp: extracted.naoWhatsapp || 0,
@@ -192,7 +223,7 @@ const App: React.FC = () => {
           paraEnviar: extracted.paraEnviar || 0
         });
         setActiveTab('new');
-        setSmartPasteText(""); // Limpa o texto se colou imagem
+        setSmartPasteText("");
       } catch (error) { 
         console.error("Erro no processamento de imagem:", error); 
       } finally { 
@@ -278,8 +309,9 @@ const App: React.FC = () => {
       <nav className="space-y-1.5 flex-1">
         {[
           { id: 'dashboard', label: 'Monitoramento', icon: LayoutDashboard },
-          { id: 'history', label: 'Consolidado', icon: Calendar },
-          { id: 'new', label: 'Lançamento', icon: Plus }
+          { id: 'history', label: 'Ciclos Ativos', icon: Calendar },
+          { id: 'new', label: 'Lançamento', icon: Plus },
+          { id: 'reports', label: 'Relatórios', icon: FileText }
         ].map((item) => (
           <button 
             key={item.id}
@@ -294,16 +326,10 @@ const App: React.FC = () => {
 
       <div className="mt-auto space-y-3 pt-6 border-t border-white/10">
         <button 
-          onClick={() => requestAuthorization("Fechar Ciclo", () => alert("Ciclo encerrado com sucesso!"))}
-          className="w-full py-3.5 rounded-xl bg-white/5 border border-white/5 text-white font-black text-[10px] hover:bg-white/10 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+          onClick={() => requestAuthorization(`Fechar Ciclo: ${currentMonth.monthName}`, closeCycleAndAdvance)}
+          className="w-full py-5 rounded-xl bg-white text-red-900 font-black text-[10px] shadow-lg hover:bg-red-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
         >
-          <Lock size={12} /> Fechar Ciclo
-        </button>
-        <button 
-          onClick={() => requestAuthorization("Mudar de Mês", () => alert("Novo mês iniciado!"))}
-          className="w-full py-4 rounded-xl bg-white text-red-900 font-black text-[10px] shadow-lg hover:bg-red-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
-        >
-          <Play size={12} fill="currentColor" /> Próximo Mês
+          <Zap size={12} fill="currentColor" /> Encerrar e Avançar
         </button>
       </div>
     </div>
@@ -311,6 +337,16 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
+      
+      {/* IMPRESSÃO DO RELATÓRIO (HIDDEN UNLESS PRINTING) */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #printable-report, #printable-report * { visibility: visible; }
+          #printable-report { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 40px; }
+          @page { margin: 1cm; }
+        }
+      `}</style>
       
       {/* SPLASH SCREEN */}
       <AnimatePresence>
@@ -359,13 +395,15 @@ const App: React.FC = () => {
           <div className="text-left">
             <p className="text-[10px] text-black font-black uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
             <h2 className="text-4xl sm:text-5xl font-black text-black tracking-tight">
-              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Lançamento'}
+              {activeTab === 'dashboard' ? currentMonth.monthName : 
+               activeTab === 'history' ? 'Consolidado' : 
+               activeTab === 'reports' ? 'Centro de Relatórios' : 'Lançamento'}
             </h2>
           </div>
           
           <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm pr-8 shrink-0 relative group">
              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                {activeTab === 'history' ? <Users size={20} /> : <Calendar size={20} />}
+                {activeTab === 'history' ? <Users size={20} /> : activeTab === 'reports' ? <FileText size={20} /> : <Calendar size={20} />}
              </div>
              <div>
                <p className="text-[9px] font-black text-black uppercase tracking-widest leading-none mb-1.5">
@@ -375,7 +413,7 @@ const App: React.FC = () => {
                   {activeTab === 'history' ? TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR') : currentMonth.totalProcessado.toLocaleString('pt-BR')}
                </p>
              </div>
-             {activeTab !== 'history' && (
+             {(activeTab === 'dashboard' || activeTab === 'new') && (
                <button 
                 onClick={() => requestAuthorization("Editar Base Mensal", () => setActiveTab('new'))}
                 className="absolute -right-2 -top-2 p-2 bg-white rounded-full shadow-md border border-slate-200 text-slate-400 hover:text-red-700 transition-all opacity-0 group-hover:opacity-100"
@@ -508,7 +546,7 @@ const App: React.FC = () => {
                 <div className="bg-slate-900 p-12 sm:p-16 text-white relative">
                   <h3 className="text-4xl font-black mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
                   <p className="text-slate-300 text-base font-bold leading-relaxed max-w-xl">
-                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela diretamente do clipboard. Os dados serão substituídos automaticamente.
+                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela. Os dados serão substituídos automaticamente e refletidos no monitoramento.
                   </p>
                 </div>
                 <div className="p-12 sm:p-16 space-y-14">
@@ -532,23 +570,13 @@ const App: React.FC = () => {
                         onChange={(e) => handleSmartPasteChange(e.target.value)} 
                         className="w-full h-56 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-base font-black text-black outline-none focus:border-red-400 focus:bg-white transition-all resize-none placeholder:text-slate-400" 
                       />
-                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
-                         <div className="flex items-center gap-3 text-slate-400">
-                            <ImageIcon size={60} />
-                            <MessageSquare size={60} />
-                         </div>
-                      </div>
                     </div>
-                    
-                    <p className="text-[10px] text-black font-black uppercase tracking-widest text-center mt-4">
-                       Nota: A colagem substitui integralmente os valores atuais.
-                    </p>
                   </div>
 
                   <form 
                     onSubmit={(e) => { 
                       e.preventDefault(); 
-                      requestAuthorization("Atualizar Monitoramento", () => setActiveTab('dashboard')); 
+                      requestAuthorization("Confirmar Atualização", () => setActiveTab('dashboard')); 
                     }} 
                     className="space-y-14"
                   >
@@ -576,12 +604,45 @@ const App: React.FC = () => {
                         <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2">Total Consolidado</p>
                         <span className="text-5xl font-black text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
-                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
+                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 shadow-2xl shadow-red-900/20">
                         Confirmar e Atualizar <ChevronRight size={22} />
                       </button>
                     </div>
                   </form>
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'reports' && (
+            <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+              <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
+                 <h3 className="text-xl font-black text-black mb-8 flex items-center gap-3"><FileText className="text-red-700"/> Relatórios Disponíveis</h3>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {history.map((item) => (
+                      <div key={item.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:border-red-200 transition-all group">
+                         <div className="flex items-center justify-between mb-6">
+                            <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm">
+                               <FileText size={24} />
+                            </div>
+                            <span className="text-[10px] font-black text-black uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full">Finalizado</span>
+                         </div>
+                         <h4 className="text-xl font-black text-black mb-1">{item.monthName}</h4>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase mb-8">Processado: {item.enviado} contatos</p>
+                         <button 
+                          onClick={() => setReportToPreview(item)}
+                          className="w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 hover:text-white hover:border-red-700 transition-all flex items-center justify-center gap-2"
+                         >
+                           <Download size={14} /> Baixar Relatório
+                         </button>
+                      </div>
+                    ))}
+                    {history.length === 0 && (
+                      <div className="col-span-full py-20 text-center text-slate-400 font-black uppercase tracking-widest text-[11px]">
+                         Nenhum relatório consolidado encontrado.
+                      </div>
+                    )}
+                 </div>
               </div>
             </motion.div>
           )}
@@ -597,26 +658,108 @@ const App: React.FC = () => {
         </footer>
       </main>
 
-      {/* MENU MOBILE COMPACTO */}
-      <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] z-50">
-        <nav className="bg-white/95 backdrop-blur-2xl border border-slate-200 rounded-[2rem] px-2 py-1.5 flex items-center justify-around shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
-          {[
-            { id: 'dashboard', label: 'Monitor', icon: LayoutDashboard },
-            { id: 'history', label: 'Ciclos', icon: Calendar },
-            { id: 'new', label: 'Add', icon: Plus }
-          ].map((item) => (
-            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-2 px-4 py-2.5 rounded-[1.5rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-lg' : 'text-slate-500'}`}>
-              <item.icon size={18} strokeWidth={activeTab === item.id ? 3 : 2} />
-              {activeTab === item.id && <span className="text-[10px] font-black uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* MODAL PREVIEW RELATÓRIO (PDF SIMULATOR) */}
+      <AnimatePresence>
+        {reportToPreview && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] overflow-y-auto p-4 sm:p-10 flex justify-center">
+             <div className="max-w-[800px] w-full bg-white shadow-2xl rounded-sm p-0 flex flex-col relative self-start">
+                
+                {/* TOOLBAR */}
+                <div className="sticky top-0 z-50 bg-slate-100 p-4 border-b border-slate-200 flex items-center justify-between print:hidden">
+                   <div className="flex items-center gap-4">
+                      <button onClick={() => window.print()} className="bg-red-700 text-white px-6 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:bg-red-800 transition-all">
+                        <Printer size={14} /> Imprimir / Salvar PDF
+                      </button>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase hidden sm:block">Padrão: Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
+                   </div>
+                   <button onClick={() => setReportToPreview(null)} className="p-2 text-slate-400 hover:text-red-700 transition-all">
+                      <X size={24} />
+                   </button>
+                </div>
+
+                {/* PDF CONTENT */}
+                <div id="printable-report" className="bg-white p-12 sm:p-20 text-slate-800 font-sans leading-relaxed relative overflow-hidden min-h-[1100px]">
+                   
+                   {/* Header Logo */}
+                   <div className="flex justify-start mb-16">
+                      <img src={LOGO_URL} alt="Logo" className="h-24 w-auto object-contain" />
+                   </div>
+
+                   <div className="space-y-8">
+                      <p className="font-bold text-lg">RedMaxx® Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
+                      
+                      <div className="space-y-1">
+                        <p className="font-bold">Título do Projeto: <span className="font-normal">API de Comunicação RedMaxx aplicada à notificação de contemplados do Bolsa Família – {reportToPreview.monthName}</span></p>
+                      </div>
+
+                      <p className="font-bold">Solicitante: <span className="font-normal">SEMASC</span></p>
+                      <p className="font-bold">Data: <span className="font-normal">Manaus, em {new Date().toLocaleDateString('pt-BR')}</span></p>
+
+                      <div className="space-y-4">
+                        <p className="font-bold">Contexto e Desafio:</p>
+                        <p className="text-sm text-justify">
+                          A Secretaria Municipal de Assistência Social (SEMASC) tem como missão ampliar o alcance das informações referentes ao programa Bolsa Família, garantindo que o maior número de contemplados seja notificado de forma clara e tempestiva. O desafio central deste projeto é assegurar a máxima cobertura do público-alvo, fortalecendo a comunicação institucional e garantindo que os beneficiários recebam, de forma ágil e confiável, os avisos relacionados ao benefício.
+                        </p>
+                      </div>
+
+                      <div className="space-y-4 pt-4">
+                        <p className="font-bold">Execução via API RedMaxx de Comunicação</p>
+                        <p className="font-bold">Operação de Envio</p>
+                        <ul className="list-disc ml-8">
+                           <li>Processados: <strong>{reportToPreview.totalProcessado} contatos</strong></li>
+                        </ul>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-slate-200">
+                        <p className="font-bold">Consolidado Geral</p>
+                        <p>• Total previsto : <strong>{reportToPreview.totalProcessado} contatos</strong></p>
+                        <p>• Total processados com API RedMaxx: <strong>{reportToPreview.enviado} contatos atingidos</strong></p>
+                        <p>• Taxa de entrega geral: <strong>{reportToPreview.taxaSucesso}% concluído</strong></p>
+                      </div>
+
+                      <div className="space-y-4 pt-6 border-t border-slate-200">
+                        <p className="font-bold">Conclusão</p>
+                        <p className="text-sm text-justify">
+                          A utilização da <strong>API de Comunicação RedMaxx</strong> garantiu confiabilidade e consistência em todo o processo, com tempos médios estáveis e finalização bem-sucedida de todas as operações. Foram atingidos {reportToPreview.enviado} beneficiários, correspondendo a {reportToPreview.taxaSucesso}% da base prevista.
+                        </p>
+                        <p className="text-sm text-justify">
+                          Essa iniciativa reforça o papel estratégico da RedMaxx como fornecedora de soluções de comunicação inteligente para o setor público, assegurando eficiência, rastreabilidade e escalabilidade para futuras campanhas sociais.
+                        </p>
+                      </div>
+                   </div>
+
+                   {/* Footer PDF */}
+                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end border-t pt-8 border-slate-100 text-[9px] text-slate-400">
+                      <div className="space-y-1 uppercase font-bold tracking-wider">
+                         <p className="text-slate-600">Manaus – AM - Matriz</p>
+                         <p>R. Rio Purús, 458, Cj.Vieiralves | N. Sra. das Graças</p>
+                         <p>CEP 69053-050 • Manaus/AM • (92) 98415-5929</p>
+                         <p>marcio.lins@redmaxx.com.br</p>
+                         <p>CNPJ: 31.291.580/0001-47</p>
+                      </div>
+                      <div className="space-y-1 uppercase font-bold tracking-wider text-right">
+                         <p className="text-slate-600">São Paulo - SP - Filial</p>
+                         <p>Av. Engenheiro Luiz Carlos Berrini, 1140</p>
+                         <p>7° Andar - Sala 201/202 | Cidade Monções</p>
+                         <p>CEP 04571-000 • São Paulo/SP</p>
+                         <p>Telefone: (11) 2391-0597</p>
+                      </div>
+                   </div>
+
+                   {/* Decorative X (Simulating the PDF design) */}
+                   <div className="absolute bottom-[-100px] right-[-100px] opacity-[0.03] pointer-events-none rotate-12">
+                      <img src={LOGO_URL} alt="" className="w-[600px] grayscale" />
+                   </div>
+                </div>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* MODAL DE AUTENTICAÇÃO */}
       <AnimatePresence>
         {isAuthOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[100] flex items-center justify-center p-8">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[200] flex items-center justify-center p-8">
             <motion.div 
               initial={{ scale: 0.9, y: 20 }} 
               animate={{ scale: 1, y: 0 }} 
