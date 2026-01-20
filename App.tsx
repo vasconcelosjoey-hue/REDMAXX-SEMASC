@@ -16,7 +16,10 @@ import StatCard from './components/StatCard.tsx';
 import './firebase.ts';
 
 const CHART_PALETTE = ['#991B1B', '#1E293B', '#64748B', '#94A3B8'];
+// Logo branca para fundos escuros (sidebar)
 const LOGO_URL_WHITE = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/CANVA%20RAPIDO.png?alt=media&token=d572d2d1-e949-4156-a4bf-5c9c5cab9d12";
+// Logo colorida para rodapé e documentos
+const LOGO_URL_COLORED = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.firebasestorage.app/o/RELAT%C3%93RIO%20SEMASC.png?alt=media&token=5d3040e8-2104-4f8d-9c32-6de168cf5dff";
 const AUTH_PASSWORD = "semascmanaus123";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode; onEdit?: () => void }> = ({ label, value, color, icon, onEdit }) => (
@@ -58,7 +61,6 @@ const App: React.FC = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'new' | 'reports'>('dashboard');
-  const [searchTerm, setSearchTerm] = useState('');
   const [reportToPreview, setReportToPreview] = useState<MonthlyStats | null>(null);
 
   const TOTAL_BASE_IDENTIFICADA = 7439;
@@ -193,6 +195,15 @@ const App: React.FC = () => {
 
   const sidebarContent = (
     <div className="flex flex-col h-full py-6">
+      <div className="mb-10 flex justify-center px-4">
+        <motion.img 
+          animate={{ y: [0, -2, 0] }} 
+          transition={{ duration: 4, repeat: Infinity }} 
+          src={LOGO_URL_WHITE} 
+          alt="Logo" 
+          className="h-16 w-auto object-contain" 
+        />
+      </div>
       <nav className="space-y-2 flex-1 pt-4">
         {[ { id: 'dashboard', label: 'Monitoramento', icon: LayoutDashboard }, { id: 'history', label: 'Ciclos Ativos', icon: Calendar }, { id: 'new', label: 'Lançamento', icon: Plus }, { id: 'reports', label: 'Relatórios', icon: FileText } ].map((item) => (
           <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-md font-black' : 'text-white/40 hover:text-white hover:bg-white/5'}`}>
@@ -221,12 +232,10 @@ const App: React.FC = () => {
       <aside className="hidden md:flex w-64 premium-red-gradient flex-col p-5 sticky top-0 h-screen z-30 shadow-xl shrink-0">{sidebarContent}</aside>
 
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Header (Heading): Apenas uma logo aqui conforme solicitado */}
+        {/* Header (Heading): Sem a logo duplicada aqui, apenas o título */}
         <header className="premium-red-gradient px-8 py-5 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-5">
-            <img src={LOGO_URL_WHITE} alt="RedMaxx" className="h-10 w-auto" />
-            <div className="h-8 w-px bg-white/20" />
-            <h2 className="text-xl font-black text-white tracking-tight leading-none uppercase">
+            <h2 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
               {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : activeTab === 'reports' ? 'Relatórios' : 'Lançamento'}
             </h2>
           </div>
@@ -353,15 +362,22 @@ const App: React.FC = () => {
             {activeTab === 'reports' && (
               <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-10 rounded-2xl border border-slate-200 shadow-sm min-h-[500px]">
                 <h3 className="text-base font-black text-black mb-10 flex items-center gap-4 uppercase tracking-tight"><FileText size={24} className="text-red-700"/> Central de Relatórios Consolidados</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {history.map((item)=>(
-                    <div key={item.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm">
-                      <div className="flex items-center gap-4 mb-5">
-                        <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm"><FileText size={22}/></div>
+                    <div key={item.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm relative">
+                      <div className="flex items-start gap-4 mb-5">
+                        <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm shrink-0"><FileText size={22}/></div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-[15px] font-black text-black truncate leading-tight">{item.monthName}</h4>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">{item.enviado} envios com sucesso</p>
+                          {/* Removido truncate para exibir nome completo */}
+                          <h4 className="text-[16px] font-black text-black leading-tight break-words">{item.monthName}</h4>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase mt-1">{item.enviado} envios com sucesso</p>
                         </div>
+                        <button 
+                          onClick={()=>requestAuthorization(`Excluir Relatório: ${item.monthName}`, ()=>deleteHistoryItem(item.id))}
+                          className="p-1.5 text-slate-400 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <Trash2 size={16}/>
+                        </button>
                       </div>
                       <button 
                         onClick={()=>setReportToPreview(item)} 
@@ -371,16 +387,32 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   ))}
-                  {history.length===0 && <div className="col-span-full py-24 text-center text-[13px] text-slate-400 font-black uppercase tracking-widest">Nenhum relatório consolidado no histórico</div>}
+                  {/* Card especial para o mês atual (em andamento) */}
+                  <div className="p-6 bg-red-50/30 rounded-2xl border border-red-100 transition-all group flex flex-col shadow-sm">
+                      <div className="flex items-start gap-4 mb-5">
+                        <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm shrink-0"><FileText size={22}/></div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-[16px] font-black text-black leading-tight break-words">{currentMonth.monthName}</h4>
+                          <p className="text-[11px] font-bold text-red-600 uppercase mt-1">Ciclo em aberto</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={()=>setReportToPreview(currentMonth)} 
+                        className="w-full py-3 bg-white border border-red-200 rounded-xl text-[11px] font-black text-red-800 uppercase tracking-widest hover:bg-red-700 hover:text-white transition-all mt-auto"
+                      >
+                        Prévia do Documento
+                      </button>
+                    </div>
+                  {history.length===0 && !currentMonth && <div className="col-span-full py-24 text-center text-[13px] text-slate-400 font-black uppercase tracking-widest">Nenhum relatório disponível</div>}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <footer className="pb-6 pt-6 border-t border-slate-200 flex items-center justify-center gap-4 opacity-30">
-           <span className="text-black text-[11px] font-black uppercase tracking-widest">Monitoramento RedMaxx & SEMASC</span>
-           <img src={LOGO_URL_WHITE} alt="Logo" className="h-5 w-auto filter invert brightness-0" />
+        <footer className="pb-6 pt-6 border-t border-slate-200 flex items-center justify-center gap-4 opacity-70">
+           <span className="text-slate-500 text-[11px] font-black uppercase tracking-widest">Powered by</span>
+           <img src={LOGO_URL_COLORED} alt="Logo Colorida" className="h-8 w-auto object-contain" />
         </footer>
       </main>
 
@@ -438,9 +470,9 @@ const App: React.FC = () => {
                    </div>
                    <button onClick={() => setReportToPreview(null)} className="p-2 text-slate-400 hover:text-red-700 transition-all"><X size={28} /></button>
                 </div>
-                {/* PDF CONTENT com melhorias de legibilidade e texto customizado */}
+                {/* PDF CONTENT com logo colorida */}
                 <div id="printable-report" className="bg-white p-16 sm:p-24 text-slate-900 font-sans relative overflow-hidden min-h-[1150px]">
-                   <div className="flex justify-start mb-16"><img src={LOGO_URL_WHITE} alt="Logo" className="h-28 w-auto object-contain filter invert brightness-0" /></div>
+                   <div className="flex justify-start mb-16"><img src={LOGO_URL_COLORED} alt="Logo Documento" className="h-32 w-auto object-contain" /></div>
                    <div className="space-y-10 text-base">
                       <h1 className="font-extrabold text-3xl text-black border-b-2 border-slate-900 pb-3 mb-10 uppercase tracking-tight">Relatório Consolidado de Impacto ({reportToPreview.monthName})</h1>
                       
@@ -470,7 +502,6 @@ const App: React.FC = () => {
                         <h2 className="font-extrabold text-black uppercase tracking-tight text-xl">Parecer Técnico e Conclusão</h2>
                         <div className="text-justify leading-relaxed text-slate-900 font-medium space-y-6">
                            <p className="font-semibold text-xl leading-snug text-black">A utilização da infraestrutura tecnológica da plataforma RedMaxx assegurou a integridade e a rastreabilidade total do processo de comunicação. Foram atingidos {reportToPreview.enviado} beneficiários diretos durante este ciclo operacional.</p>
-                           {/* Texto personalizado que o usuário digitou */}
                            {reportToPreview.customText && (
                              <div className="p-8 bg-red-50 border-l-8 border-red-700 rounded-r-2xl text-slate-800 font-bold italic leading-relaxed shadow-sm text-lg">
                                 "{reportToPreview.customText}"
