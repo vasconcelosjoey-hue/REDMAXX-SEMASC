@@ -23,19 +23,19 @@ const LOGO_URL_COLORED = "https://firebasestorage.googleapis.com/v0/b/redmaxx-se
 const AUTH_PASSWORD = "semascmanaus123";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode; onEdit?: () => void }> = ({ label, value, color, icon, onEdit }) => (
-  <div className="flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-slate-300 relative group/card">
-    <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center text-white shadow-sm shrink-0`}>
-      {React.cloneElement(icon as React.ReactElement, { size: 18 })}
+  <div className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-slate-300 relative group/card flex-1 min-w-[200px]">
+    <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center text-white shadow-sm shrink-0`}>
+      {React.cloneElement(icon as React.ReactElement, { size: 22 })}
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-[11px] font-black text-black uppercase tracking-wider mb-0.5 truncate">{label}</p>
-      <p className="text-xl font-black text-black leading-none">{value.toLocaleString('pt-BR')}</p>
+      <p className="text-[12px] font-black text-black uppercase tracking-wider mb-0.5 whitespace-nowrap">{label}</p>
+      <p className="text-2xl font-black text-black leading-none">{value.toLocaleString('pt-BR')}</p>
     </div>
     <button 
       onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-      className="p-1.5 rounded-md text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
+      className="p-2 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
     >
-      <Pencil size={14} />
+      <Pencil size={16} />
     </button>
   </div>
 );
@@ -194,82 +194,88 @@ const App: React.FC = () => {
   const pieData = [ { name: 'Recebidas', value: currentMonth.enviado }, { name: 'Não WhatsApp', value: currentMonth.naoWhatsapp }, { name: 'Sem Número', value: currentMonth.semNumero }, { name: 'Para Enviar', value: currentMonth.paraEnviar } ];
 
   const sidebarContent = (
-    <div className="flex flex-col h-full py-6">
-      <div className="mb-10 flex justify-center px-4">
+    <div className="flex flex-col h-full py-10">
+      <div className="mb-14 flex justify-center px-4">
         <motion.img 
-          animate={{ y: [0, -2, 0] }} 
+          animate={{ y: [0, -3, 0] }} 
           transition={{ duration: 4, repeat: Infinity }} 
           src={LOGO_URL_WHITE} 
           alt="Logo" 
-          className="h-16 w-auto object-contain" 
+          className="h-28 w-auto object-contain" 
         />
       </div>
-      <nav className="space-y-2 flex-1 pt-4">
+      <nav className="space-y-3 flex-1 pt-6 px-4">
         {[ { id: 'dashboard', label: 'Monitoramento', icon: LayoutDashboard }, { id: 'history', label: 'Ciclos Ativos', icon: Calendar }, { id: 'new', label: 'Lançamento', icon: Plus }, { id: 'reports', label: 'Relatórios', icon: FileText } ].map((item) => (
-          <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-md font-black' : 'text-white/40 hover:text-white hover:bg-white/5'}`}>
-            <item.icon size={20} strokeWidth={activeTab === item.id ? 3 : 2} />
-            <span className="text-[14px] tracking-tight">{item.label}</span>
+          <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-4 px-6 py-5 rounded-2xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-xl font-black' : 'text-white/40 hover:text-white hover:bg-white/5'}`}>
+            <item.icon size={22} strokeWidth={activeTab === item.id ? 3 : 2} />
+            <span className="text-[16px] tracking-tight font-extrabold uppercase">{item.label}</span>
           </button>
         ))}
       </nav>
-      <div className="mt-auto pt-6 border-t border-white/10">
-        <button onClick={() => requestAuthorization(`Fechar Ciclo: ${currentMonth.monthName}`, closeCycleAndAdvance)} className="w-full py-4 rounded-xl bg-white text-red-900 font-black text-[12px] shadow-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-50">
-          <Zap size={14} fill="currentColor" /> Fechar Ciclo Mensal
+      <div className="mt-auto pt-8 border-t border-white/10 px-4">
+        <button onClick={() => requestAuthorization(`Fechar Ciclo: ${currentMonth.monthName}`, closeCycleAndAdvance)} className="w-full py-5 rounded-2xl bg-white text-red-900 font-black text-[14px] shadow-sm uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-50 transition-all">
+          <Zap size={16} fill="currentColor" /> Fechar Ciclo Mensal
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc] text-[14px]">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc] text-[15px]">
       <style>{`
         @media print { body * { visibility: hidden; } #printable-report, #printable-report * { visibility: visible; } #printable-report { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 40px; } @page { margin: 1cm; } }
         body { zoom: 1.0; }
+        .no-wrap { white-space: nowrap; }
       `}</style>
       
-      <AnimatePresence>{isInitializing && <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center p-8 overflow-hidden"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative mb-10"><img src={LOGO_URL_WHITE} alt="Logo" className="h-40 w-auto relative z-10" /></motion.div><div className="w-full max-w-xs h-1.5 bg-white/5 rounded-full overflow-hidden relative"><motion.div initial={{ width: 0 }} animate={{ width: `${initProgress}%` }} className="absolute inset-y-0 left-0 premium-red-gradient" /></div><p className="mt-6 text-slate-500 font-black text-[11px] uppercase tracking-[0.4em] flex items-center gap-2"><Zap size={14} className="text-red-600" /> Sincronizando Sistemas</p></motion.div>}</AnimatePresence>
+      <AnimatePresence>{isInitializing && <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900 z-[9999] flex flex-col items-center justify-center p-8 overflow-hidden"><motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative mb-12"><img src={LOGO_URL_WHITE} alt="Logo" className="h-48 w-auto relative z-10" /></motion.div><div className="w-full max-w-sm h-2 bg-white/5 rounded-full overflow-hidden relative"><motion.div initial={{ width: 0 }} animate={{ width: `${initProgress}%` }} className="absolute inset-y-0 left-0 premium-red-gradient" /></div><p className="mt-8 text-slate-500 font-black text-[13px] uppercase tracking-[0.5em] flex items-center gap-3"><Zap size={18} className="text-red-600" /> Sincronizando RedMaxx</p></motion.div>}</AnimatePresence>
 
-      <aside className="hidden md:flex w-64 premium-red-gradient flex-col p-5 sticky top-0 h-screen z-30 shadow-xl shrink-0">{sidebarContent}</aside>
+      <aside className="hidden md:flex w-72 premium-red-gradient flex-col sticky top-0 h-screen z-30 shadow-2xl shrink-0">{sidebarContent}</aside>
 
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Header (Heading): Sem a logo duplicada aqui, apenas o título */}
-        <header className="premium-red-gradient px-8 py-5 flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-5">
-            <h2 className="text-2xl font-black text-white tracking-tight leading-none uppercase">
-              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : activeTab === 'reports' ? 'Relatórios' : 'Lançamento'}
+        {/* Header (Heading): Sem o ícone de calendário conforme solicitado */}
+        <header className="premium-red-gradient px-10 py-6 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-6">
+            <h2 className="text-3xl font-black text-white tracking-tighter leading-none uppercase no-wrap">
+              {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Ciclos Consolidados' : activeTab === 'reports' ? 'Central de Relatórios' : 'Lançamento Operacional'}
             </h2>
           </div>
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-6">
              <div className="text-right">
-               <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none mb-1">Base Atual</p>
-               <p className="text-2xl font-black text-white leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</p>
+               <p className="text-[12px] font-black text-white/50 uppercase tracking-[0.2em] leading-none mb-1">Base Atual</p>
+               <p className="text-3xl font-black text-white leading-none tracking-tighter">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</p>
              </div>
-             <div className="w-11 h-11 bg-white/10 rounded-xl flex items-center justify-center text-white"><Calendar size={22} /></div>
+             {/* Removido o ícone de calendário daqui */}
           </div>
         </header>
 
-        <div className="p-6 sm:p-8 lg:p-10 flex-1">
+        <div className="p-8 sm:p-10 lg:p-12 flex-1">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
-              <motion.div key="dash" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-                  <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm xl:col-span-1 flex flex-col">
-                    <h3 className="text-[11px] font-black uppercase tracking-widest text-black mb-8">Estatísticas da Competência</h3>
-                    <div className="grid grid-cols-1 gap-4 mb-8">
-                      <MiniStatusCard label="Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} />
-                      <MiniStatusCard label="Inválidos" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} />
-                      <MiniStatusCard label="Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} />
-                      <MiniStatusCard label="Pendente" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<SendHorizontal/>} />
-                    </div>
-                    <div className="h-[220px] relative">
-                      <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={pieData} innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value">{pieData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} stroke="none" />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span className="text-[11px] font-black text-black uppercase tracking-widest">Taxa</span><span className="text-3xl font-black text-black">{currentMonth.taxaSucesso}%</span></div>
-                    </div>
+              <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-10">
+                {/* Reorganização das estatísticas de forma LINEAR */}
+                <div className="bg-white p-10 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+                  <h3 className="text-[13px] font-black uppercase tracking-widest text-black mb-8 border-l-4 border-red-700 pl-4">Estatísticas da Competência em Tempo Real</h3>
+                  <div className="flex flex-wrap gap-6 mb-10">
+                    <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} />
+                    <MiniStatusCard label="Contatos Inválidos" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} />
+                    <MiniStatusCard label="Cadastros Sem Número" value={currentMonth.semNumero} color="bg-slate-500" icon={<UserMinus/>} />
+                    <MiniStatusCard label="Mensagens Pendentes" value={currentMonth.paraEnviar} color="bg-slate-300" icon={<SendHorizontal/>} />
                   </div>
-                  <div className="bg-white p-10 rounded-2xl border border-slate-200 shadow-sm xl:col-span-3 flex flex-col h-[550px]">
-                    <h3 className="text-[11px] font-black uppercase tracking-widest text-black mb-10">Desempenho Histórico de Envios</h3>
-                    <div className="flex-1 min-h-0">
-                      <ResponsiveContainer width="100%" height="100%"><AreaChart data={[...history].concat([currentMonth])}><defs><linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#991B1B" stopOpacity={0.1}/><stop offset="95%" stopColor="#991B1B" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 12, fontWeight: 900}} /><YAxis axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 12, fontWeight: 900}} /><Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 6px 16px rgba(0,0,0,0.1)', fontSize: '13px', fontWeight: 'bold' }} /><Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={5} fill="url(#colorArea)" dot={{ r: 5, fill: '#991B1B', stroke: '#fff', strokeWidth: 2.5 }} /></AreaChart></ResponsiveContainer>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col items-center justify-center h-[350px]">
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6">Distribuição de Status</h4>
+                      <div className="w-full h-full relative">
+                        <ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={pieData} innerRadius={80} outerRadius={120} paddingAngle={8} dataKey="value">{pieData.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} stroke="none" />)}</Pie><Tooltip /></PieChart></ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">Efetividade</span><span className="text-4xl font-black text-black">{currentMonth.taxaSucesso}%</span></div>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-8 rounded-2xl flex flex-col h-[350px]">
+                      <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6">Tendência de Competência</h4>
+                      <div className="flex-1 min-h-0">
+                        <ResponsiveContainer width="100%" height="100%"><AreaChart data={[...history].concat([currentMonth])}><defs><linearGradient id="colorArea" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#991B1B" stopOpacity={0.15}/><stop offset="95%" stopColor="#991B1B" stopOpacity={0}/></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" /><XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 13, fontWeight: 800}} /><YAxis axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 13, fontWeight: 800}} /><Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '14px', fontWeight: 'bold', padding: '16px' }} /><Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={6} fill="url(#colorArea)" dot={{ r: 7, fill: '#991B1B', stroke: '#fff', strokeWidth: 3 }} /></AreaChart></ResponsiveContainer>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -277,27 +283,27 @@ const App: React.FC = () => {
             )}
 
             {activeTab === 'history' && (
-              <motion.div key="hist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <StatCard label="TAXA GLOBAL" value={`${taxaTotalProcessamento}%`} icon={<ShieldCheck />} gradient="from-slate-800 to-slate-900" glowColor="rgba(0,0,0,0.02)" subtitle="Eficiência Acumulada" />
-                  <StatCard label="BASE ATIVA" value={TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR')} icon={<Users />} gradient="from-red-800 to-red-950" glowColor="rgba(153,27,27,0.02)" subtitle="Total Identificado" />
+              <motion.div key="hist" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <StatCard label="TAXA GLOBAL DE SUCESSO" value={`${taxaTotalProcessamento}%`} icon={<ShieldCheck />} gradient="from-slate-800 to-slate-900" glowColor="rgba(0,0,0,0.02)" subtitle="Consolidado Geral" />
+                  <StatCard label="BASE ATIVA IDENTIFICADA" value={TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR')} icon={<Users />} gradient="from-red-800 to-red-950" glowColor="rgba(153,27,27,0.02)" subtitle="Cidadãos Cadastrados" />
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {Object.entries(groupedCalendarView).sort((a,b) => parseInt(b[0])-parseInt(a[0])).map(([year, months]) => (
-                    <div key={year} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div key={year} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                       <button 
                         onClick={() => setExpandedYears(prev => prev.includes(parseInt(year)) ? prev.filter(y => y !== parseInt(year)) : [...prev, parseInt(year)])}
-                        className="w-full px-10 py-6 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                        className="w-full px-12 py-8 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors"
                       >
-                        <h3 className="text-base font-black text-black uppercase tracking-widest">CICLO {year}</h3>
-                        <ChevronDown size={20} className={`text-slate-400 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
+                        <h3 className="text-xl font-black text-black uppercase tracking-[0.2em]">CICLO OPERACIONAL {year}</h3>
+                        <ChevronDown size={24} className={`text-slate-400 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
                       </button>
                       <AnimatePresence>
                         {expandedYears.includes(parseInt(year)) && (
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-100">
-                            <div className="overflow-x-auto"><table className="w-full text-left text-[14px]">
-                              <thead><tr className="bg-slate-50/30 text-[11px] font-black text-black uppercase tracking-widest"><th className="px-10 py-4.5">Mês de Referência</th><th className="px-10 py-4.5 text-center">Processados</th><th className="px-10 py-4.5 text-center">Eficiência</th><th className="px-10 py-4.5 text-center">Status</th></tr></thead>
-                              <tbody className="divide-y divide-slate-50">{(months as any[]).map((item) => (<tr key={item.monthName} className={`hover:bg-slate-50/30 ${item.status==='Aguardando'?'opacity-30':''}`}><td className="px-10 py-4.5 font-black text-black">{item.monthName}</td><td className="px-10 py-4.5 text-center font-bold text-black">{item.enviado || 0}</td><td className="px-10 py-4.5 text-center font-bold text-black">{item.taxaSucesso}%</td><td className="px-10 py-4.5 text-center"><div className="flex items-center justify-center gap-4"><span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${item.status==='Consolidado'?'bg-slate-100 text-slate-800 border-slate-200':'bg-red-50 text-red-800 border-red-100'}`}>{item.status}</span>{item.status==='Consolidado' && <button onClick={()=>requestAuthorization(`Excluir ${item.monthName}`, ()=>deleteHistoryItem(item.id))} className="p-1 text-slate-400 hover:text-red-700"><Trash2 size={20}/></button>}</div></td></tr>))}</tbody>
+                            <div className="overflow-x-auto"><table className="w-full text-left text-[16px]">
+                              <thead><tr className="bg-slate-50/30 text-[12px] font-black text-slate-500 uppercase tracking-widest"><th className="px-12 py-6">Mês de Referência</th><th className="px-12 py-6 text-center">Processados</th><th className="px-12 py-6 text-center">Efetividade</th><th className="px-12 py-6 text-center">Status</th></tr></thead>
+                              <tbody className="divide-y divide-slate-100">{(months as any[]).map((item) => (<tr key={item.monthName} className={`hover:bg-slate-50/30 ${item.status==='Aguardando'?'opacity-30':''}`}><td className="px-12 py-6 font-black text-black no-wrap">{item.monthName}</td><td className="px-12 py-6 text-center font-bold text-slate-700">{item.enviado || 0}</td><td className="px-12 py-6 text-center font-bold text-slate-700">{item.taxaSucesso}%</td><td className="px-12 py-6 text-center"><div className="flex items-center justify-center gap-6"><span className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest border ${item.status==='Consolidado'?'bg-slate-100 text-slate-800 border-slate-200':'bg-red-50 text-red-800 border-red-100'}`}>{item.status}</span>{item.status==='Consolidado' && <button onClick={()=>requestAuthorization(`Excluir Dados: ${item.monthName}`, ()=>deleteHistoryItem(item.id))} className="p-2 text-slate-300 hover:text-red-700 transition-all"><Trash2 size={22}/></button>}</div></td></tr>))}</tbody>
                             </table></div>
                           </motion.div>
                         )}
@@ -309,48 +315,48 @@ const App: React.FC = () => {
             )}
 
             {activeTab === 'new' && (
-              <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className="bg-slate-900 p-8 text-white flex items-center justify-between">
+              <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
+                <div className="bg-white rounded-[40px] shadow-2xl border border-slate-200 overflow-hidden">
+                  <div className="bg-slate-900 p-10 text-white flex items-center justify-between">
                     <div>
-                      <h3 className="text-xl font-black mb-1 flex items-center gap-4 uppercase tracking-tight">Lançamento Operacional</h3>
-                      <p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest">Atualização manual de registros da competência ativa</p>
+                      <h3 className="text-2xl font-black mb-2 flex items-center gap-5 uppercase tracking-tighter">Lançamento de Registro</h3>
+                      <p className="text-slate-400 text-[14px] font-bold uppercase tracking-widest">Atualização manual das métricas de competência</p>
                     </div>
-                    <div className="p-4 bg-white/5 rounded-2xl"><Wand2 size={32} className="text-red-500" /></div>
+                    <div className="p-5 bg-white/5 rounded-3xl"><Wand2 size={40} className="text-red-500" /></div>
                   </div>
-                  <div className="p-10 space-y-10">
-                    <form onSubmit={(e)=>{e.preventDefault();setActiveTab('dashboard');}} className="space-y-8">
-                      <div className="grid grid-cols-2 gap-8">
-                        {[{id:'enviado',label:'Recebidas'},{id:'naoWhatsapp',label:'Inválidos'},{id:'semNumero',label:'Sem Número'},{id:'paraEnviar',label:'Pendente'}].map((f)=>(
-                          <div key={f.id} className="space-y-2">
-                            <label className="text-[11px] font-black text-black uppercase tracking-widest">{f.label}</label>
+                  <div className="p-12 space-y-12">
+                    <form onSubmit={(e)=>{e.preventDefault();setActiveTab('dashboard');}} className="space-y-10">
+                      <div className="grid grid-cols-2 gap-10">
+                        {[{id:'enviado',label:'Mensagens Recebidas'},{id:'naoWhatsapp',label:'Contatos Inválidos'},{id:'semNumero',label:'Sem Número Cadastrado'},{id:'paraEnviar',label:'Fila Pendente'}].map((f)=>(
+                          <div key={f.id} className="space-y-3">
+                            <label className="text-[12px] font-black text-black uppercase tracking-widest pl-2">{f.label}</label>
                             <input 
                               type="number" 
                               value={(currentMonth as any)[f.id]} 
                               onChange={e=>updateCurrentData({[f.id]:e.target.value})} 
-                              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-xl font-black text-black outline-none focus:border-red-600 focus:bg-white transition-all shadow-inner" 
+                              className="w-full bg-slate-50 border border-slate-200 rounded-[24px] px-8 py-6 text-2xl font-black text-black outline-none focus:border-red-600 focus:bg-white transition-all shadow-inner" 
                             />
                           </div>
                         ))}
                       </div>
                       
-                      <div className="space-y-3 pt-2">
-                        <label className="text-[11px] font-black text-black uppercase tracking-widest flex items-center gap-3"><AlignLeft size={18}/> Conclusão Técnica do Relatório</label>
+                      <div className="space-y-4 pt-4">
+                        <label className="text-[12px] font-black text-black uppercase tracking-widest flex items-center gap-4 pl-2"><AlignLeft size={20}/> Conclusão Técnica Customizada</label>
                         <textarea 
                           value={currentMonth.customText || ''} 
                           onChange={(e)=>updateCurrentData({customText: e.target.value})}
-                          placeholder="Digite aqui as observações que serão impressas na conclusão do relatório PDF..."
-                          className="w-full h-40 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-[15px] font-bold text-black outline-none focus:border-red-600 focus:bg-white transition-all resize-none shadow-inner"
+                          placeholder="Observações que serão impressas na seção final do relatório em PDF..."
+                          className="w-full h-48 bg-slate-50 border border-slate-200 rounded-[32px] p-8 text-[17px] font-bold text-black outline-none focus:border-red-600 focus:bg-white transition-all resize-none shadow-inner"
                         />
                       </div>
 
-                      <div className="pt-8 flex items-center justify-between gap-8 border-t border-slate-100">
+                      <div className="pt-10 flex items-center justify-between gap-10 border-t border-slate-100">
                         <div>
-                          <p className="text-[11px] font-black text-black uppercase tracking-widest">Base Consolidada Mensal</p>
-                          <span className="text-4xl font-black text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                          <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-1">Base Consolidada Atual</p>
+                          <span className="text-5xl font-black text-black leading-none tracking-tighter">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                         </div>
-                        <button type="submit" className="premium-red-gradient text-white px-10 py-5 rounded-2xl font-black text-[12px] uppercase tracking-widest flex items-center gap-3 shadow-lg hover:brightness-110">
-                          Atualizar Registro <ChevronRight size={22}/>
+                        <button type="submit" className="premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[14px] uppercase tracking-widest flex items-center gap-4 shadow-2xl hover:brightness-110 transition-all hover:scale-[1.02]">
+                          Confirmar Atualização <ChevronRight size={24}/>
                         </button>
                       </div>
                     </form>
@@ -360,67 +366,71 @@ const App: React.FC = () => {
             )}
 
             {activeTab === 'reports' && (
-              <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-10 rounded-2xl border border-slate-200 shadow-sm min-h-[500px]">
-                <h3 className="text-base font-black text-black mb-10 flex items-center gap-4 uppercase tracking-tight"><FileText size={24} className="text-red-700"/> Central de Relatórios Consolidados</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <motion.div key="reports" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-12 rounded-[40px] border border-slate-200 shadow-sm min-h-[600px]">
+                <h3 className="text-2xl font-black text-black mb-12 flex items-center gap-5 uppercase tracking-tighter"><FileText size={32} className="text-red-700"/> Central de Relatórios Consolidados</h3>
+                {/* Cards ajustados para mostrar NOME COMPLETO e permitir EXCLUSÃO */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {history.map((item)=>(
-                    <div key={item.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm relative">
-                      <div className="flex items-start gap-4 mb-5">
-                        <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm shrink-0"><FileText size={22}/></div>
+                    <div key={item.id} className="p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-red-200 transition-all group flex flex-col shadow-sm relative overflow-visible">
+                      <div className="flex items-start gap-5 mb-6">
+                        <div className="p-4 bg-white rounded-2xl text-red-700 shadow-sm shrink-0"><FileText size={26}/></div>
                         <div className="min-w-0 flex-1">
-                          {/* Removido truncate para exibir nome completo */}
-                          <h4 className="text-[16px] font-black text-black leading-tight break-words">{item.monthName}</h4>
-                          <p className="text-[11px] font-bold text-slate-500 uppercase mt-1">{item.enviado} envios com sucesso</p>
+                          <h4 className="text-[18px] font-black text-black leading-tight no-wrap">{item.monthName}</h4>
+                          <p className="text-[12px] font-bold text-slate-500 uppercase mt-2">{item.enviado} envios com êxito</p>
                         </div>
+                        {/* Botão de exclusão sempre visível com autorização */}
                         <button 
                           onClick={()=>requestAuthorization(`Excluir Relatório: ${item.monthName}`, ()=>deleteHistoryItem(item.id))}
-                          className="p-1.5 text-slate-400 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-2 text-slate-300 hover:text-red-700 transition-all absolute top-6 right-6"
                         >
-                          <Trash2 size={16}/>
+                          <Trash2 size={20}/>
                         </button>
                       </div>
                       <button 
                         onClick={()=>setReportToPreview(item)} 
-                        className="w-full py-3 bg-white border border-slate-200 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-red-700 hover:text-white transition-all mt-auto"
+                        className="w-full py-4 bg-white border border-slate-200 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-red-700 hover:text-white transition-all mt-auto shadow-sm"
                       >
                         Gerar Documento PDF
                       </button>
                     </div>
                   ))}
-                  {/* Card especial para o mês atual (em andamento) */}
-                  <div className="p-6 bg-red-50/30 rounded-2xl border border-red-100 transition-all group flex flex-col shadow-sm">
-                      <div className="flex items-start gap-4 mb-5">
-                        <div className="p-3 bg-white rounded-xl text-red-700 shadow-sm shrink-0"><FileText size={22}/></div>
+                  {/* Card do mês atual */}
+                  <div className="p-8 bg-red-50/20 rounded-3xl border border-red-100 transition-all group flex flex-col shadow-sm">
+                      <div className="flex items-start gap-5 mb-6">
+                        <div className="p-4 bg-white rounded-2xl text-red-700 shadow-sm shrink-0"><FileText size={26}/></div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-[16px] font-black text-black leading-tight break-words">{currentMonth.monthName}</h4>
-                          <p className="text-[11px] font-bold text-red-600 uppercase mt-1">Ciclo em aberto</p>
+                          <h4 className="text-[18px] font-black text-black leading-tight no-wrap">{currentMonth.monthName}</h4>
+                          <p className="text-[12px] font-bold text-red-600 uppercase mt-2">Ciclo em aberto</p>
                         </div>
                       </div>
                       <button 
                         onClick={()=>setReportToPreview(currentMonth)} 
-                        className="w-full py-3 bg-white border border-red-200 rounded-xl text-[11px] font-black text-red-800 uppercase tracking-widest hover:bg-red-700 hover:text-white transition-all mt-auto"
+                        className="w-full py-4 bg-white border border-red-200 rounded-2xl text-[12px] font-black text-red-800 uppercase tracking-widest hover:bg-red-700 hover:text-white transition-all mt-auto shadow-sm"
                       >
-                        Prévia do Documento
+                        Visualizar Prévia
                       </button>
                     </div>
-                  {history.length===0 && !currentMonth && <div className="col-span-full py-24 text-center text-[13px] text-slate-400 font-black uppercase tracking-widest">Nenhum relatório disponível</div>}
                 </div>
+                {history.length===0 && !currentMonth && (
+                  <div className="py-32 text-center text-[15px] text-slate-400 font-black uppercase tracking-widest">Nenhum registro encontrado no sistema</div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <footer className="pb-6 pt-6 border-t border-slate-200 flex items-center justify-center gap-4 opacity-70">
-           <span className="text-slate-500 text-[11px] font-black uppercase tracking-widest">Powered by</span>
-           <img src={LOGO_URL_COLORED} alt="Logo Colorida" className="h-8 w-auto object-contain" />
+        <footer className="pb-10 pt-10 border-t border-slate-200 flex items-center justify-center gap-6">
+           <span className="text-slate-400 text-[13px] font-black uppercase tracking-[0.3em]">Powered by</span>
+           <img src={LOGO_URL_COLORED} alt="RedMaxx Powered" className="h-10 w-auto object-contain hover:scale-105 transition-transform" />
         </footer>
       </main>
 
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[340px] z-50">
-        <nav className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-full px-3 py-3 flex items-center justify-around shadow-2xl">
+      {/* Menu Mobile */}
+      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] z-50">
+        <nav className="bg-white/95 backdrop-blur-2xl border border-slate-200 rounded-[32px] px-4 py-4 flex items-center justify-around shadow-2xl">
           {[{id:'dashboard',i:LayoutDashboard},{id:'history',i:Calendar},{id:'new',i:Plus},{id:'reports',i:FileText}].map((item)=>(
-            <button key={item.id} onClick={()=>setActiveTab(item.id as any)} className={`p-3.5 rounded-full transition-all ${activeTab===item.id?'bg-red-900 text-white shadow-md': 'text-slate-400'}`}>
-              <item.i size={24} strokeWidth={activeTab===item.id?3:2}/>
+            <button key={item.id} onClick={()=>setActiveTab(item.id as any)} className={`p-4 rounded-2xl transition-all ${activeTab===item.id?'bg-red-900 text-white shadow-xl scale-110': 'text-slate-400'}`}>
+              <item.i size={26} strokeWidth={activeTab===item.id?3:2}/>
             </button>
           ))}
         </nav>
@@ -428,19 +438,19 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {isAuthOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[200] flex items-center justify-center p-8">
-            <motion.div initial={{ scale: 0.9, y: 10 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-3xl p-10 text-center shadow-2xl max-w-sm w-full border-t-8 border-red-700 flex flex-col items-center">
-              <ShieldAlert size={48} className="text-red-700 mb-6"/>
-              <h3 className="text-2xl font-black text-black mb-2 tracking-tight uppercase">Segurança Operacional</h3>
-              <p className="text-black text-[11px] font-black uppercase tracking-widest mb-10">CONFIRMAR: {pendingAction?.label}</p>
-              <div className="w-full space-y-6">
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl px-5 flex items-center transition-all focus-within:border-red-600/30">
-                  <KeyRound size={22} className="text-slate-400 mr-4"/><input type="password" placeholder="••••••••" autoFocus value={authInput} onChange={(e)=>setAuthInput(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&confirmAuthorization()} className="w-full bg-transparent py-5 text-xl font-black text-black outline-none tracking-widest" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-2xl z-[200] flex items-center justify-center p-8">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-[40px] p-12 text-center shadow-2xl max-w-md w-full border-t-[12px] border-red-700 flex flex-col items-center">
+              <ShieldAlert size={64} className="text-red-700 mb-8"/>
+              <h3 className="text-3xl font-black text-black mb-3 tracking-tighter uppercase">Segurança Operacional</h3>
+              <p className="text-slate-500 text-[12px] font-black uppercase tracking-widest mb-12">AUTORIZAR: {pendingAction?.label}</p>
+              <div className="w-full space-y-8">
+                <div className="bg-slate-50 border-2 border-slate-200 rounded-3xl px-6 flex items-center transition-all focus-within:border-red-600 focus-within:bg-white">
+                  <KeyRound size={26} className="text-slate-400 mr-5"/><input type="password" placeholder="••••••••" autoFocus value={authInput} onChange={(e)=>setAuthInput(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&confirmAuthorization()} className="w-full bg-transparent py-6 text-2xl font-black text-black outline-none tracking-[0.5em]" />
                 </div>
-                {authError && <p className="text-red-600 text-[11px] font-black uppercase tracking-widest">Código de Acesso Incorreto</p>}
-                <div className="flex gap-4">
-                  <button onClick={()=>setIsAuthOpen(false)} className="flex-1 py-4 rounded-xl bg-slate-100 text-slate-800 font-black text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancelar</button>
-                  <button onClick={confirmAuthorization} className="flex-[2] py-4 rounded-xl premium-red-gradient text-white font-black text-[11px] uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">Autorizar</button>
+                {authError && <p className="text-red-600 text-[12px] font-black uppercase tracking-widest animate-pulse">Código de Acesso Inválido</p>}
+                <div className="flex gap-5">
+                  <button onClick={()=>setIsAuthOpen(false)} className="flex-1 py-5 rounded-2xl bg-slate-100 text-slate-800 font-black text-[13px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancelar</button>
+                  <button onClick={confirmAuthorization} className="flex-[2] py-5 rounded-2xl premium-red-gradient text-white font-black text-[13px] uppercase tracking-widest shadow-2xl hover:brightness-110 transition-all">Desbloquear</button>
                 </div>
               </div>
             </motion.div>
@@ -450,11 +460,11 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {isProcessing && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[200] flex items-center justify-center p-8">
-            <div className="bg-white rounded-3xl p-12 text-center shadow-2xl max-w-xs w-full">
-              <Loader2 className="w-16 h-16 text-red-700 animate-spin mx-auto mb-6"/>
-              <h3 className="text-xl font-black text-black mb-2 uppercase tracking-tight">Processando</h3>
-              <p className="text-black text-[11px] font-black uppercase tracking-widest">Sincronizando Banco de Dados...</p>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[200] flex items-center justify-center p-8">
+            <div className="bg-white rounded-[48px] p-16 text-center shadow-2xl max-w-sm w-full">
+              <Loader2 className="w-20 h-20 text-red-700 animate-spin mx-auto mb-8"/>
+              <h3 className="text-2xl font-black text-black mb-2 uppercase tracking-tighter">Processando</h3>
+              <p className="text-slate-400 text-[13px] font-black uppercase tracking-widest">Sincronizando com Servidores RedMaxx...</p>
             </div>
           </motion.div>
         )}
@@ -462,58 +472,57 @@ const App: React.FC = () => {
       
       <AnimatePresence>
         {reportToPreview && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] overflow-y-auto p-4 sm:p-12 flex justify-center">
-             <div className="max-w-[850px] w-full bg-white shadow-2xl rounded-sm p-0 flex flex-col relative self-start">
-                <div className="sticky top-0 z-50 bg-slate-100 p-5 border-b border-slate-200 flex items-center justify-between print:hidden">
-                   <div className="flex items-center gap-4">
-                      <button onClick={() => window.print()} className="bg-red-700 text-white px-6 py-2.5 rounded-xl font-black text-[12px] uppercase tracking-widest flex items-center gap-3 shadow hover:bg-red-800 transition-all"><Printer size={16} /> Imprimir / Baixar PDF</button>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[150] overflow-y-auto p-4 sm:p-14 flex justify-center">
+             <div className="max-w-[900px] w-full bg-white shadow-2xl rounded-sm p-0 flex flex-col relative self-start">
+                <div className="sticky top-0 z-50 bg-slate-100 p-6 border-b border-slate-200 flex items-center justify-between print:hidden">
+                   <div className="flex items-center gap-5">
+                      <button onClick={() => window.print()} className="bg-red-700 text-white px-8 py-3 rounded-2xl font-black text-[13px] uppercase tracking-widest flex items-center gap-4 shadow-xl hover:bg-red-800 transition-all"><Printer size={20} /> Imprimir / Exportar PDF</button>
                    </div>
-                   <button onClick={() => setReportToPreview(null)} className="p-2 text-slate-400 hover:text-red-700 transition-all"><X size={28} /></button>
+                   <button onClick={() => setReportToPreview(null)} className="p-3 text-slate-400 hover:text-red-700 transition-all"><X size={32} /></button>
                 </div>
-                {/* PDF CONTENT com logo colorida */}
-                <div id="printable-report" className="bg-white p-16 sm:p-24 text-slate-900 font-sans relative overflow-hidden min-h-[1150px]">
-                   <div className="flex justify-start mb-16"><img src={LOGO_URL_COLORED} alt="Logo Documento" className="h-32 w-auto object-contain" /></div>
-                   <div className="space-y-10 text-base">
-                      <h1 className="font-extrabold text-3xl text-black border-b-2 border-slate-900 pb-3 mb-10 uppercase tracking-tight">Relatório Consolidado de Impacto ({reportToPreview.monthName})</h1>
+                <div id="printable-report" className="bg-white p-20 sm:p-28 text-slate-900 font-sans relative overflow-hidden min-h-[1200px]">
+                   <div className="flex justify-start mb-20"><img src={LOGO_URL_COLORED} alt="Logo Documento" className="h-40 w-auto object-contain" /></div>
+                   <div className="space-y-12 text-lg">
+                      <h1 className="font-extrabold text-4xl text-black border-b-4 border-slate-900 pb-5 mb-12 uppercase tracking-tighter">Relatório de Impacto Operacional ({reportToPreview.monthName})</h1>
                       
-                      <div className="grid grid-cols-1 gap-5 text-lg">
-                        <p className="leading-tight"><strong>Operação:</strong> Notificação de Beneficiários Bolsa Família via API RedMaxx</p>
+                      <div className="grid grid-cols-1 gap-6 text-xl">
+                        <p className="leading-tight"><strong>Operação Estratégica:</strong> Notificação de Beneficiários Bolsa Família via API RedMaxx</p>
                         <p><strong>Órgão Demandante:</strong> Secretaria Municipal de Assistência Social (SEMASC)</p>
                         <p><strong>Data de Emissão:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
                       </div>
 
-                      <div className="pt-10 border-t border-slate-100 space-y-5">
-                        <h2 className="font-extrabold text-black uppercase tracking-tight text-xl">Contexto e Justificativa</h2>
-                        <p className="text-justify leading-relaxed text-slate-700">A Secretaria Municipal de Assistência Social (SEMASC) executa o compromisso de garantir a fluidez da informação aos beneficiários do programa Bolsa Família. Este relatório documenta a eficácia do canal automatizado RedMaxx na entrega de avisos oficiais, assegurando que o público-alvo seja notificado com agilidade, transparência e segurança institucional.</p>
+                      <div className="pt-12 border-t border-slate-100 space-y-6">
+                        <h2 className="font-extrabold text-black uppercase tracking-tight text-2xl">Contexto e Objetivos Institucionais</h2>
+                        <p className="text-justify leading-relaxed text-slate-700">A Secretaria Municipal de Assistência Social (SEMASC) reafirma seu compromisso com a transparência e agilidade na comunicação com os beneficiários do programa Bolsa Família. Este documento formaliza a entrega de informações vitais através da infraestrutura tecnológica RedMaxx, garantindo que o cidadão receba notificações oficiais de forma segura e imediata.</p>
                       </div>
 
-                      <div className="pt-10 border-t border-slate-100 space-y-6">
-                        <h2 className="font-extrabold text-black uppercase tracking-tight text-xl">Métricas de Operação Consolidada</h2>
-                        <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100">
-                           <ul className="space-y-4">
-                              <li className="flex justify-between border-b border-slate-200 pb-4"><span>Público Identificado na Base:</span> <strong className="text-black text-xl">{reportToPreview.totalProcessado}</strong></li>
-                              <li className="flex justify-between border-b border-slate-200 pb-4 text-red-900 font-bold"><span>Entregas Concluídas com Sucesso:</span> <strong className="font-black text-xl">{reportToPreview.enviado}</strong></li>
-                              <li className="flex justify-between pt-2"><span>Índice de Efetividade da Campanha:</span> <strong className="text-black text-xl font-black">{reportToPreview.taxaSucesso}%</strong></li>
+                      <div className="pt-12 border-t border-slate-100 space-y-8">
+                        <h2 className="font-extrabold text-black uppercase tracking-tight text-2xl">Indicadores de Desempenho (Métricas)</h2>
+                        <div className="bg-slate-50 p-10 rounded-3xl border border-slate-100">
+                           <ul className="space-y-6">
+                              <li className="flex justify-between border-b border-slate-200 pb-6"><span>Base Total Identificada:</span> <strong className="text-black text-2xl">{reportToPreview.totalProcessado}</strong></li>
+                              <li className="flex justify-between border-b border-slate-200 pb-6 text-red-900 font-bold"><span>Entregas Concluídas (Sucesso):</span> <strong className="font-black text-2xl">{reportToPreview.enviado}</strong></li>
+                              <li className="flex justify-between pt-4"><span>Índice Geral de Efetividade:</span> <strong className="text-black text-3xl font-black">{reportToPreview.taxaSucesso}%</strong></li>
                            </ul>
                         </div>
                       </div>
 
-                      <div className="pt-10 border-t border-slate-200 space-y-6">
-                        <h2 className="font-extrabold text-black uppercase tracking-tight text-xl">Parecer Técnico e Conclusão</h2>
-                        <div className="text-justify leading-relaxed text-slate-900 font-medium space-y-6">
-                           <p className="font-semibold text-xl leading-snug text-black">A utilização da infraestrutura tecnológica da plataforma RedMaxx assegurou a integridade e a rastreabilidade total do processo de comunicação. Foram atingidos {reportToPreview.enviado} beneficiários diretos durante este ciclo operacional.</p>
+                      <div className="pt-12 border-t-2 border-slate-200 space-y-8">
+                        <h2 className="font-extrabold text-black uppercase tracking-tight text-2xl">Análise Técnica e Conclusão</h2>
+                        <div className="text-justify leading-relaxed text-slate-900 font-medium space-y-8">
+                           <p className="font-semibold text-2xl leading-tight text-black">A operação realizada via RedMaxx assegurou a integridade total do fluxo comunicacional. Ao final deste ciclo, foram atingidos de forma direta {reportToPreview.enviado} beneficiários cadastrados.</p>
                            {reportToPreview.customText && (
-                             <div className="p-8 bg-red-50 border-l-8 border-red-700 rounded-r-2xl text-slate-800 font-bold italic leading-relaxed shadow-sm text-lg">
+                             <div className="p-10 bg-red-50 border-l-[12px] border-red-700 rounded-r-[32px] text-slate-800 font-bold italic leading-relaxed shadow-lg text-xl">
                                 "{reportToPreview.customText}"
                              </div>
                            )}
-                           <p className="pt-6 text-sm text-slate-500 italic uppercase tracking-widest font-bold">Relatório autenticado automaticamente para fins de auditoria e prestação de contas governamentais.</p>
+                           <p className="pt-8 text-base text-slate-400 italic uppercase tracking-[0.2em] font-black">Documento autenticado digitalmente para prestação de contas e auditoria governamental.</p>
                         </div>
                       </div>
                    </div>
-                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end border-t pt-10 border-slate-200 text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                      <div className="space-y-1"><p className="text-slate-800 text-xs">Manaus/AM - Sede Administrativa</p><p>R. Rio Purús, 458 | Vieiralves</p></div>
-                      <div className="space-y-1 text-right"><p className="text-slate-800 text-xs">São Paulo/SP - Escritório Regional</p><p>Av. Berrini, 1140 | Monções</p></div>
+                   <div className="absolute bottom-16 left-20 right-20 flex justify-between items-end border-t-2 pt-12 border-slate-200 text-[13px] text-slate-400 font-black uppercase tracking-widest">
+                      <div className="space-y-2"><p className="text-slate-800 text-sm">Manaus/AM - Hub Tecnológico</p><p>R. Rio Purús, 458 | Vieiralves</p></div>
+                      <div className="space-y-2 text-right"><p className="text-slate-800 text-sm">São Paulo/SP - Regional</p><p>Av. Berrini, 1140 | Monções</p></div>
                    </div>
                 </div>
              </div>
