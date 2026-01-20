@@ -21,17 +21,17 @@ const LOGO_URL = "https://firebasestorage.googleapis.com/v0/b/redmaxx-semasc.fir
 const AUTH_PASSWORD = "semascmanaus123";
 
 const MiniStatusCard: React.FC<{ label: string; value: number; color: string; icon: React.ReactNode; onEdit?: () => void }> = ({ label, value, color, icon, onEdit }) => (
-  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200 relative group/card">
+  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-slate-300 relative group/card">
     <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center text-white shadow-md shrink-0`}>
       {React.cloneElement(icon as React.ReactElement, { size: 18 })}
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-[9px] font-extrabold text-black uppercase tracking-wider mb-0.5 truncate">{label}</p>
-      <p className="text-xl font-bold text-black leading-none">{value.toLocaleString('pt-BR')}</p>
+      <p className="text-[10px] font-black text-black uppercase tracking-wider mb-0.5 truncate">{label}</p>
+      <p className="text-xl font-black text-black leading-none">{value.toLocaleString('pt-BR')}</p>
     </div>
     <button 
       onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-      className="p-2 rounded-lg text-slate-300 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
+      className="p-2 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all opacity-0 group-hover/card:opacity-100"
     >
       <Pencil size={14} />
     </button>
@@ -132,7 +132,7 @@ const App: React.FC = () => {
   };
 
   const updateCurrentData = (data: Partial<MonthlyStats>) => {
-    // A lógica aqui substitui o valor (substituir, não somar)
+    // Garantir substituição total dos campos enviados
     const updated = { ...currentMonth, ...data };
     const enviado = Number(updated.enviado) || 0;
     const naoWhatsapp = Number(updated.naoWhatsapp) || 0;
@@ -140,7 +140,16 @@ const App: React.FC = () => {
     const paraEnviar = Number(updated.paraEnviar) || 0;
     const total = enviado + naoWhatsapp + semNumero + paraEnviar;
     const taxa = total > 0 ? Number(((enviado / total) * 100).toFixed(2)) : 0;
-    setCurrentMonth({ ...updated, enviado, naoWhatsapp, semNumero, paraEnviar, totalProcessado: total, taxaSucesso: taxa });
+    
+    setCurrentMonth({ 
+      ...updated, 
+      enviado, 
+      naoWhatsapp, 
+      semNumero, 
+      paraEnviar, 
+      totalProcessado: total, 
+      taxaSucesso: taxa 
+    });
   };
 
   const handleSmartPasteChange = (text: string) => {
@@ -149,18 +158,20 @@ const App: React.FC = () => {
       const match = text.match(pattern);
       return match ? parseInt(match[1].replace(/\D/g, '')) : null;
     };
+    
     const enviado = parseNumber(/(?:enviado|sucesso|enviados|recebidas|mensagens recebidas)[:\s-]*([\d.,]+)/i);
     const naoWhatsapp = parseNumber(/(?:não.*whatsapp|inválidos|invalido|contatos não são whatsapp)[:\s-]*([\d.,]+)/i);
     const semNumero = parseNumber(/(?:sem.*número|cadastros.*sem|omisso|contatos sem número)[:\s-]*([\d.,]+)/i);
     const paraEnviar = parseNumber(/(?:para.*enviar|pendente|fila|para enviar)[:\s-]*([\d.,]+)/i);
     
+    // Se encontrou qualquer valor, substitui os campos no formulário
     if (enviado !== null || naoWhatsapp !== null || semNumero !== null || paraEnviar !== null) {
       setLastProcessedType('text');
       updateCurrentData({
-        enviado: enviado !== null ? enviado : currentMonth.enviado,
-        naoWhatsapp: naoWhatsapp !== null ? naoWhatsapp : currentMonth.naoWhatsapp,
-        semNumero: semNumero !== null ? semNumero : currentMonth.semNumero,
-        paraEnviar: paraEnviar !== null ? paraEnviar : currentMonth.paraEnviar
+        enviado: enviado !== null ? enviado : 0,
+        naoWhatsapp: naoWhatsapp !== null ? naoWhatsapp : 0,
+        semNumero: semNumero !== null ? semNumero : 0,
+        paraEnviar: paraEnviar !== null ? paraEnviar : 0
       });
     }
   };
@@ -173,7 +184,7 @@ const App: React.FC = () => {
       try {
         const extracted = await extractDataFromImage(base64);
         setLastProcessedType('image');
-        // Substituição direta dos valores encontrados na imagem
+        // Substituição direta dos valores encontrados na imagem para os inputs
         updateCurrentData({
           enviado: extracted.enviado || 0,
           naoWhatsapp: extracted.naoWhatsapp || 0,
@@ -181,32 +192,32 @@ const App: React.FC = () => {
           paraEnviar: extracted.paraEnviar || 0
         });
         setActiveTab('new');
-      } catch (error) { console.error(error); } finally { setIsProcessing(false); }
+        setSmartPasteText(""); // Limpa o texto se colou imagem
+      } catch (error) { 
+        console.error("Erro no processamento de imagem:", error); 
+      } finally { 
+        setIsProcessing(false); 
+      }
     };
     reader.readAsDataURL(file);
   };
 
   useEffect(() => {
-    const handlePaste = (event: ClipboardEvent) => {
+    const handlePasteGlobal = (event: ClipboardEvent) => {
       const items = event.clipboardData?.items;
       if (!items) return;
       
-      let imageFound = false;
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image') !== -1) {
           const file = items[i].getAsFile();
           if (file) {
             processImageFile(file);
-            imageFound = true;
           }
         }
       }
-      
-      // Se for apenas texto e não estivermos no textarea de lançamento, processa globalmente se desejado
-      // Mas a regra agora é focar na aba de lançamento
     };
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
+    window.addEventListener('paste', handlePasteGlobal);
+    return () => window.removeEventListener('paste', handlePasteGlobal);
   }, [currentMonth]);
 
   const groupedCalendarView = useMemo(() => {
@@ -273,9 +284,9 @@ const App: React.FC = () => {
           <button 
             key={item.id}
             onClick={() => setActiveTab(item.id as any)}
-            className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-xl font-bold translate-x-1' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-all ${activeTab === item.id ? 'bg-white text-red-900 shadow-xl font-black translate-x-1' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
           >
-            <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+            <item.icon size={18} strokeWidth={activeTab === item.id ? 3 : 2} />
             <span className="text-sm tracking-tight">{item.label}</span>
           </button>
         ))}
@@ -284,13 +295,13 @@ const App: React.FC = () => {
       <div className="mt-auto space-y-3 pt-6 border-t border-white/10">
         <button 
           onClick={() => requestAuthorization("Fechar Ciclo", () => alert("Ciclo encerrado com sucesso!"))}
-          className="w-full py-3.5 rounded-xl bg-white/5 border border-white/5 text-white/50 font-bold text-[10px] hover:bg-white/10 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-xl bg-white/5 border border-white/5 text-white font-black text-[10px] hover:bg-white/10 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
         >
           <Lock size={12} /> Fechar Ciclo
         </button>
         <button 
           onClick={() => requestAuthorization("Mudar de Mês", () => alert("Novo mês iniciado!"))}
-          className="w-full py-4 rounded-xl bg-white text-red-900 font-bold text-[10px] shadow-lg hover:bg-red-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-xl bg-white text-red-900 font-black text-[10px] shadow-lg hover:bg-red-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
         >
           <Play size={12} fill="currentColor" /> Próximo Mês
         </button>
@@ -331,7 +342,7 @@ const App: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="mt-6 text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em] flex items-center gap-3"
+              className="mt-6 text-slate-500 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-3"
             >
               <Zap size={14} className="text-red-600" /> Sincronizando Sistemas
             </motion.p>
@@ -346,28 +357,28 @@ const App: React.FC = () => {
       <main className="flex-1 min-w-0 p-5 sm:p-8 lg:p-10 mb-10 md:mb-0">
         <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
           <div className="text-left">
-            <p className="text-[10px] text-black font-extrabold uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
-            <h2 className="text-4xl sm:text-5xl font-bold text-black tracking-tight">
+            <p className="text-[10px] text-black font-black uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
+            <h2 className="text-4xl sm:text-5xl font-black text-black tracking-tight">
               {activeTab === 'dashboard' ? currentMonth.monthName : activeTab === 'history' ? 'Consolidado' : 'Lançamento'}
             </h2>
           </div>
           
-          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-100 shadow-sm pr-8 shrink-0 relative group">
+          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm pr-8 shrink-0 relative group">
              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
                 {activeTab === 'history' ? <Users size={20} /> : <Calendar size={20} />}
              </div>
              <div>
-               <p className="text-[9px] font-extrabold text-black uppercase tracking-widest leading-none mb-1.5">
+               <p className="text-[9px] font-black text-black uppercase tracking-widest leading-none mb-1.5">
                   {activeTab === 'history' ? 'Base Total Ativa' : `Base de ${currentMonth.monthName.split('/')[0]}`}
                </p>
-               <p className="text-2xl font-bold text-black leading-none">
+               <p className="text-2xl font-black text-black leading-none">
                   {activeTab === 'history' ? TOTAL_BASE_IDENTIFICADA.toLocaleString('pt-BR') : currentMonth.totalProcessado.toLocaleString('pt-BR')}
                </p>
              </div>
              {activeTab !== 'history' && (
                <button 
                 onClick={() => requestAuthorization("Editar Base Mensal", () => setActiveTab('new'))}
-                className="absolute -right-2 -top-2 p-2 bg-white rounded-full shadow-md border border-slate-100 text-slate-300 hover:text-red-700 transition-all opacity-0 group-hover:opacity-100"
+                className="absolute -right-2 -top-2 p-2 bg-white rounded-full shadow-md border border-slate-200 text-slate-400 hover:text-red-700 transition-all opacity-0 group-hover:opacity-100"
                >
                  <Pencil size={12} />
                </button>
@@ -379,8 +390,8 @@ const App: React.FC = () => {
           {activeTab === 'dashboard' && (
             <motion.div key="dash" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-12">
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
-                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-1 flex flex-col">
-                  <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-black mb-10">Distribuição Mensal</h3>
+                <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm xl:col-span-1 flex flex-col">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-black mb-10">Distribuição Mensal</h3>
                   <div className="grid grid-cols-1 gap-4 mb-12">
                     <MiniStatusCard label="Mensagens Recebidas" value={currentMonth.enviado} color="bg-red-700" icon={<MessageSquare/>} onEdit={() => requestAuthorization("Editar Mensagens Recebidas", () => setActiveTab('new'))} />
                     <MiniStatusCard label="Contatos Não São WhatsApp" value={currentMonth.naoWhatsapp} color="bg-slate-800" icon={<PhoneOff/>} onEdit={() => requestAuthorization("Editar Contatos Inválidos", () => setActiveTab('new'))} />
@@ -397,13 +408,13 @@ const App: React.FC = () => {
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                       <span className="text-[9px] font-extrabold text-black uppercase tracking-widest mb-1">Taxa</span>
-                       <span className="text-3xl font-bold text-black">{currentMonth.taxaSucesso}%</span>
+                       <span className="text-[9px] font-black text-black uppercase tracking-widest mb-1">Taxa</span>
+                       <span className="text-3xl font-black text-black">{currentMonth.taxaSucesso}%</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm xl:col-span-2 flex flex-col">
-                  <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-black mb-10">Evolução Histórica</h3>
+                <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm xl:col-span-2 flex flex-col">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-black mb-10">Evolução Histórica</h3>
                   <div className="flex-1 min-h-[450px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={[...history].concat([currentMonth])}>
@@ -413,10 +424,10 @@ const App: React.FC = () => {
                              <stop offset="95%" stopColor="#991B1B" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 800}} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 800}} />
-                        <Tooltip />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="monthName" axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 900}} />
+                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#000', fontSize: 11, fontWeight: 900}} />
+                        <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#000' }} />
                         <Area type="monotone" dataKey="enviado" stroke="#991B1B" strokeWidth={5} fill="url(#colorArea)" dot={{ r: 6, fill: '#991B1B', stroke: '#fff', strokeWidth: 4 }} />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -432,45 +443,45 @@ const App: React.FC = () => {
                 <StatCard label="TAXA GLOBAL" value={`${taxaTotalProcessamento}%`} icon={<ShieldCheck />} gradient="from-slate-800 to-slate-900" glowColor="rgba(0, 0, 0, 0.05)" subtitle="Eficiência Acumulada" />
                 <StatCard label="TOTAL PROCESSADO" value={totalBaseProcessada.toLocaleString('pt-BR')} icon={<Users />} gradient="from-red-800 to-red-950" glowColor="rgba(153, 27, 27, 0.05)" subtitle="Volume Consolidado" />
               </div>
-              <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 px-8 max-w-xl">
-                 <Search className="text-slate-300" size={20} />
-                 <input type="text" placeholder="Buscar competência..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-1 bg-transparent border-none outline-none text-slate-700 font-semibold text-lg placeholder:text-slate-300" />
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-5 px-8 max-w-xl">
+                 <Search className="text-slate-400" size={20} />
+                 <input type="text" placeholder="Buscar competência..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-1 bg-transparent border-none outline-none text-black font-black text-lg placeholder:text-slate-300" />
               </div>
               <div className="space-y-10">
                 {Object.entries(groupedCalendarView).sort((a, b) => parseInt(b[0]) - parseInt(a[0])).map(([year, months]) => (
-                  <div key={year} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+                  <div key={year} className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden">
                     <button onClick={() => setExpandedYears(prev => prev.includes(parseInt(year)) ? prev.filter(y => y !== parseInt(year)) : [...prev, parseInt(year)])} className="w-full flex items-center justify-between px-10 py-8 hover:bg-slate-50 transition-colors">
-                      <h3 className="text-2xl font-bold text-black tracking-tight uppercase tracking-widest">CICLO {year}</h3>
-                      <ChevronDown size={28} className={`text-slate-300 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
+                      <h3 className="text-2xl font-black text-black tracking-tight uppercase tracking-widest">CICLO {year}</h3>
+                      <ChevronDown size={28} className={`text-slate-400 transition-transform ${expandedYears.includes(parseInt(year)) ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
                       {expandedYears.includes(parseInt(year)) && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-50">
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-slate-100">
                           <div className="overflow-x-auto">
                             <table className="w-full text-left">
                               <thead>
                                 <tr className="bg-slate-50/50">
-                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest">Competência</th>
-                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Processados</th>
-                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Eficiência</th>
-                                  <th className="px-10 py-6 text-[10px] font-extrabold text-black uppercase tracking-widest text-center">Ações</th>
+                                  <th className="px-10 py-6 text-[10px] font-black text-black uppercase tracking-widest">Competência</th>
+                                  <th className="px-10 py-6 text-[10px] font-black text-black uppercase tracking-widest text-center">Processados</th>
+                                  <th className="px-10 py-6 text-[10px] font-black text-black uppercase tracking-widest text-center">Eficiência</th>
+                                  <th className="px-10 py-6 text-[10px] font-black text-black uppercase tracking-widest text-center">Ações</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
                                 {(months as any[]).map((item: any) => (
                                   <tr key={item.monthName} className={`transition-colors ${item.status === 'Aguardando' ? 'opacity-25' : 'hover:bg-slate-50/50'}`}>
-                                    <td className="px-10 py-6 font-bold text-black text-base">{item.monthName}</td>
-                                    <td className="px-10 py-6 text-center font-bold text-black text-lg">{item.enviado || 0}</td>
-                                    <td className="px-10 py-6 text-center font-bold text-black text-base">{item.taxaSucesso}%</td>
+                                    <td className="px-10 py-6 font-black text-black text-base">{item.monthName}</td>
+                                    <td className="px-10 py-6 text-center font-black text-black text-lg">{item.enviado || 0}</td>
+                                    <td className="px-10 py-6 text-center font-black text-black text-base">{item.taxaSucesso}%</td>
                                     <td className="px-10 py-6 text-center">
                                        <div className="flex items-center justify-center gap-4">
-                                          <span className={`px-4 py-1.5 rounded-xl text-[9px] font-extrabold uppercase tracking-widest border ${item.status === 'Consolidado' ? 'bg-slate-50 text-slate-500 border-slate-100' : item.status === 'Em andamento' ? 'bg-red-50 text-red-700 border-red-100' : 'text-slate-300 border-transparent'}`}>
+                                          <span className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border ${item.status === 'Consolidado' ? 'bg-slate-100 text-slate-900 border-slate-200' : item.status === 'Em andamento' ? 'bg-red-50 text-red-900 border-red-100' : 'text-slate-300 border-transparent'}`}>
                                             {item.status}
                                           </span>
                                           {item.status === 'Consolidado' && (
                                             <button 
                                               onClick={() => requestAuthorization(`Excluir ${item.monthName}`, () => deleteHistoryItem(item.id))}
-                                              className="p-2.5 rounded-xl text-slate-300 hover:text-red-600 hover:bg-red-50 transition-all"
+                                              className="p-2.5 rounded-xl text-slate-400 hover:text-red-700 hover:bg-red-50 transition-all"
                                             >
                                               <Trash2 size={18} />
                                             </button>
@@ -493,22 +504,22 @@ const App: React.FC = () => {
 
           {activeTab === 'new' && (
             <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-100 overflow-hidden">
+              <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-200 overflow-hidden">
                 <div className="bg-slate-900 p-12 sm:p-16 text-white relative">
-                  <h3 className="text-4xl font-bold mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
-                  <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">
-                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela diretamente do clipboard.
+                  <h3 className="text-4xl font-black mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
+                  <p className="text-slate-300 text-base font-bold leading-relaxed max-w-xl">
+                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela diretamente do clipboard. Os dados serão substituídos automaticamente.
                   </p>
                 </div>
                 <div className="p-12 sm:p-16 space-y-14">
                   <div className="space-y-5 relative">
                     <div className="flex items-center justify-between mb-2">
-                       <label className="text-[11px] font-extrabold text-black uppercase tracking-widest flex items-center gap-4">
+                       <label className="text-[11px] font-black text-black uppercase tracking-widest flex items-center gap-4">
                           <ClipboardPaste size={18} /> Zona de Colagem (Ctrl+V)
                        </label>
                        {lastProcessedType && (
-                         <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-2">
-                            <CheckCircle2 size={12} /> Valores atualizados via {lastProcessedType === 'image' ? 'Imagem' : 'Texto'}
+                         <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-2">
+                            <CheckCircle2 size={12} /> Valores substituídos via {lastProcessedType === 'image' ? 'Imagem' : 'Texto'}
                          </motion.span>
                        )}
                     </div>
@@ -516,21 +527,21 @@ const App: React.FC = () => {
                     <div className="relative group">
                       <textarea 
                         ref={pasteAreaRef}
-                        placeholder="Cole o relatório de texto aqui ou apenas Ctrl+V se tiver copiado uma imagem..." 
+                        placeholder="Cole o relatório de texto aqui ou apenas Ctrl+V se tiver copiado uma imagem de status..." 
                         value={smartPasteText} 
                         onChange={(e) => handleSmartPasteChange(e.target.value)} 
-                        className="w-full h-56 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-base font-medium text-black outline-none focus:border-red-200 focus:bg-white transition-all resize-none placeholder:text-slate-300" 
+                        className="w-full h-56 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-base font-black text-black outline-none focus:border-red-400 focus:bg-white transition-all resize-none placeholder:text-slate-400" 
                       />
-                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                         <div className="flex items-center gap-3 text-slate-300">
-                            <ImageIcon size={40} />
-                            <MessageSquare size={40} />
+                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
+                         <div className="flex items-center gap-3 text-slate-400">
+                            <ImageIcon size={60} />
+                            <MessageSquare size={60} />
                          </div>
                       </div>
                     </div>
                     
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center mt-4">
-                       Dica: Copie o status da plataforma e cole aqui. Os valores serão substituídos automaticamente.
+                    <p className="text-[10px] text-black font-black uppercase tracking-widest text-center mt-4">
+                       Nota: A colagem substitui integralmente os valores atuais.
                     </p>
                   </div>
 
@@ -543,29 +554,29 @@ const App: React.FC = () => {
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                       {[
-                        { id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-500' }, 
-                        { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-800' }, 
-                        { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-400' }, 
-                        { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-400' }
+                        { id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-600' }, 
+                        { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-900' }, 
+                        { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-600' }, 
+                        { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-600' }
                       ].map((field) => (
                         <div key={field.id} className="space-y-4">
-                          <label className="text-[10px] font-extrabold text-black uppercase tracking-widest ml-1">{field.label}</label>
+                          <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">{field.label}</label>
                           <input 
                             type="number" 
                             value={(currentMonth as any)[field.id]} 
                             onChange={e => updateCurrentData({ [field.id]: e.target.value })} 
-                            className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-5 text-3xl font-bold text-black outline-none transition-all ${field.color}`} 
+                            className={`w-full bg-slate-50 border border-slate-300 rounded-2xl px-8 py-5 text-3xl font-black text-black outline-none transition-all ${field.color}`} 
                           />
                         </div>
                       ))}
                     </div>
                     
-                    <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-50">
+                    <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-100">
                       <div>
-                        <p className="text-[10px] font-extrabold text-black uppercase tracking-widest mb-2">Total Consolidado</p>
-                        <span className="text-5xl font-bold text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                        <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2">Total Consolidado</p>
+                        <span className="text-5xl font-black text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
-                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-bold text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
+                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 transition-transform hover:scale-105 active:scale-95 shadow-2xl shadow-red-900/20">
                         Confirmar e Atualizar <ChevronRight size={22} />
                       </button>
                     </div>
@@ -576,27 +587,27 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <footer className="mt-20 pb-8 pt-8 border-t border-slate-100 flex items-center justify-center gap-4">
-           <span className="text-black text-[10px] font-extrabold uppercase tracking-[0.2em]">Powered by</span>
+        <footer className="mt-20 pb-8 pt-8 border-t border-slate-200 flex items-center justify-center gap-4">
+           <span className="text-black text-[10px] font-black uppercase tracking-[0.2em]">Powered by</span>
            <motion.img 
             src={LOGO_URL} 
             alt="RedMaxx Logo" 
-            className="h-6 w-auto object-contain filter grayscale hover:grayscale-0 hover:opacity-100 transition-all" 
+            className="h-6 w-auto object-contain filter hover:brightness-110 transition-all" 
           />
         </footer>
       </main>
 
       {/* MENU MOBILE COMPACTO */}
       <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] z-50">
-        <nav className="bg-white/90 backdrop-blur-2xl border border-white/50 rounded-[2rem] px-2 py-1.5 flex items-center justify-around shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+        <nav className="bg-white/95 backdrop-blur-2xl border border-slate-200 rounded-[2rem] px-2 py-1.5 flex items-center justify-around shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
           {[
             { id: 'dashboard', label: 'Monitor', icon: LayoutDashboard },
             { id: 'history', label: 'Ciclos', icon: Calendar },
             { id: 'new', label: 'Add', icon: Plus }
           ].map((item) => (
-            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-2 px-4 py-2.5 rounded-[1.5rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-lg' : 'text-slate-400'}`}>
-              <item.icon size={18} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-              {activeTab === item.id && <span className="text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
+            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-2 px-4 py-2.5 rounded-[1.5rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-lg' : 'text-slate-500'}`}>
+              <item.icon size={18} strokeWidth={activeTab === item.id ? 3 : 2} />
+              {activeTab === item.id && <span className="text-[10px] font-black uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
             </button>
           ))}
         </nav>
@@ -614,20 +625,20 @@ const App: React.FC = () => {
             >
               <div className="absolute top-0 left-0 w-full h-2 premium-red-gradient" />
               
-              <div className="mb-10 inline-flex p-6 rounded-3xl bg-slate-50 border border-slate-100 text-red-700 shadow-inner">
+              <div className="mb-10 inline-flex p-6 rounded-3xl bg-slate-50 border border-slate-200 text-red-700 shadow-inner">
                  <ShieldAlert size={48} strokeWidth={1.5} />
               </div>
 
-              <h3 className="text-3xl font-bold text-black mb-2 tracking-tight">Autorização Necessária</h3>
-              <p className="text-black text-[10px] font-extrabold uppercase tracking-[0.2em] mb-12">
-                COMANDO: <span className="text-red-700">{pendingAction?.label}</span>
+              <h3 className="text-3xl font-black text-black mb-2 tracking-tight">Autorização Necessária</h3>
+              <p className="text-black text-[10px] font-black uppercase tracking-[0.2em] mb-12">
+                COMANDO: <span className="text-red-800">{pendingAction?.label}</span>
               </p>
 
               <div className="space-y-8">
                 <div className="relative group">
                   <div className={`absolute inset-0 bg-red-600/10 rounded-2xl blur-xl opacity-0 transition-opacity duration-500 group-focus-within:opacity-100`} />
-                  <div className="relative bg-slate-50 border-2 border-slate-100 rounded-2xl flex items-center px-6 transition-all focus-within:border-red-600/30 group">
-                    <KeyRound size={20} className="text-slate-300 mr-4" />
+                  <div className="relative bg-slate-50 border-2 border-slate-200 rounded-2xl flex items-center px-6 transition-all focus-within:border-red-600/30 group">
+                    <KeyRound size={20} className="text-slate-400 mr-4" />
                     <input 
                       type="password" 
                       placeholder="••••••••••••"
@@ -635,11 +646,11 @@ const App: React.FC = () => {
                       value={authInput}
                       onChange={(e) => setAuthInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && confirmAuthorization()}
-                      className="w-full bg-transparent py-5 text-xl font-bold text-black outline-none placeholder:text-slate-200 tracking-[0.2em]"
+                      className="w-full bg-transparent py-5 text-xl font-black text-black outline-none placeholder:text-slate-300 tracking-[0.2em]"
                     />
                   </div>
                   {authError && (
-                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-600 text-[9px] font-bold uppercase tracking-widest mt-4">
+                    <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-600 text-[10px] font-black uppercase tracking-widest mt-4">
                       ACESSO NEGADO: CÓDIGO INVÁLIDO
                     </motion.p>
                   )}
@@ -648,13 +659,13 @@ const App: React.FC = () => {
                 <div className="flex gap-4 pt-4">
                   <button 
                     onClick={() => { setIsAuthOpen(false); setPendingAction(null); }}
-                    className="flex-1 py-5 rounded-2xl bg-slate-100 text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    className="flex-1 py-5 rounded-2xl bg-slate-100 text-slate-900 font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all"
                   >
                     Abortar
                   </button>
                   <button 
                     onClick={confirmAuthorization}
-                    className="flex-[2] py-5 rounded-2xl premium-red-gradient text-white font-bold text-[10px] uppercase tracking-widest shadow-xl shadow-red-900/20 hover:scale-[1.02] transition-all"
+                    className="flex-[2] py-5 rounded-2xl premium-red-gradient text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-red-900/20 hover:scale-[1.02] transition-all"
                   >
                     Validar Comando
                   </button>
@@ -675,8 +686,8 @@ const App: React.FC = () => {
                   <div className="w-4 h-4 bg-red-100 rounded-full" />
                 </div>
               </div>
-              <h3 className="text-2xl font-bold text-black mb-3 tracking-tight">Extraindo Dados</h3>
-              <p className="text-black text-[11px] font-extrabold uppercase tracking-widest leading-relaxed">Analisando imagem com inteligência artificial de alto desempenho</p>
+              <h3 className="text-2xl font-black text-black mb-3 tracking-tight">Extraindo Dados</h3>
+              <p className="text-black text-[11px] font-black uppercase tracking-widest leading-relaxed">Analisando imagem com inteligência artificial de alto desempenho</p>
             </div>
           </motion.div>
         )}
