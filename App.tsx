@@ -153,11 +153,9 @@ const App: React.FC = () => {
   };
 
   const closeCycleAndAdvance = () => {
-    // 1. Salva o atual no histórico
     const closedMonth = { ...currentMonth, id: Date.now().toString(), isClosed: true };
     setHistory(prev => [...prev, closedMonth]);
 
-    // 2. Calcula o próximo mês
     const monthsArr = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     const [month, year] = currentMonth.monthName.split('/');
     let nextIdx = monthsArr.indexOf(month) + 1;
@@ -168,7 +166,6 @@ const App: React.FC = () => {
     }
     const nextMonthName = `${monthsArr[nextIdx]}/${nextYear}`;
 
-    // 3. Zera tudo
     setCurrentMonth({
       id: 'current',
       monthName: nextMonthName,
@@ -338,7 +335,6 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-[#f8fafc]">
       
-      {/* IMPRESSÃO DO RELATÓRIO (HIDDEN UNLESS PRINTING) */}
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -348,7 +344,6 @@ const App: React.FC = () => {
         }
       `}</style>
       
-      {/* SPLASH SCREEN */}
       <AnimatePresence>
         {isInitializing && (
           <motion.div 
@@ -394,14 +389,14 @@ const App: React.FC = () => {
         <header className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-10">
           <div className="text-left">
             <p className="text-[10px] text-black font-black uppercase tracking-[0.25em] mb-2">PLATAFORMA SEMASC V9.0</p>
-            <h2 className="text-4xl sm:text-5xl font-black text-black tracking-tight">
+            <h2 className="text-4xl sm:text-5xl font-black text-black tracking-tight leading-none">
               {activeTab === 'dashboard' ? currentMonth.monthName : 
                activeTab === 'history' ? 'Consolidado' : 
                activeTab === 'reports' ? 'Centro de Relatórios' : 'Lançamento'}
             </h2>
           </div>
           
-          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm pr-8 shrink-0 relative group">
+          <div className="flex items-center gap-5 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm pr-8 shrink-0 relative group h-20">
              <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg">
                 {activeTab === 'history' ? <Users size={20} /> : activeTab === 'reports' ? <FileText size={20} /> : <Calendar size={20} />}
              </div>
@@ -541,23 +536,23 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'new' && (
-            <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-[3.5rem] shadow-sm border border-slate-200 overflow-hidden">
-                <div className="bg-slate-900 p-12 sm:p-16 text-white relative">
-                  <h3 className="text-4xl font-black mb-5 flex items-center gap-5">Lançamento Inteligente <Wand2 className="text-red-500" /></h3>
-                  <p className="text-slate-300 text-base font-bold leading-relaxed max-w-xl">
-                    Sincronize os dados. Aceitamos colagem de relatórios em texto ou capturas de tela. Os dados serão substituídos automaticamente e refletidos no monitoramento.
+            <motion.div key="new" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto">
+              <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-slate-900 p-6 sm:p-8 text-white relative">
+                  <h3 className="text-2xl font-black mb-2 flex items-center gap-3">Lançamento Inteligente <Wand2 className="text-red-500" size={20} /></h3>
+                  <p className="text-slate-300 text-[11px] font-bold leading-relaxed max-w-xl">
+                    Sincronize os dados colando relatórios ou capturas de tela. Valores serão substituídos automaticamente.
                   </p>
                 </div>
-                <div className="p-12 sm:p-16 space-y-14">
-                  <div className="space-y-5 relative">
-                    <div className="flex items-center justify-between mb-2">
-                       <label className="text-[11px] font-black text-black uppercase tracking-widest flex items-center gap-4">
-                          <ClipboardPaste size={18} /> Zona de Colagem (Ctrl+V)
+                <div className="p-6 sm:p-8 space-y-6">
+                  <div className="space-y-3 relative">
+                    <div className="flex items-center justify-between">
+                       <label className="text-[10px] font-black text-black uppercase tracking-widest flex items-center gap-3">
+                          <ClipboardPaste size={16} /> Zona de Colagem (Ctrl+V)
                        </label>
                        {lastProcessedType && (
-                         <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-2">
-                            <CheckCircle2 size={12} /> Valores substituídos via {lastProcessedType === 'image' ? 'Imagem' : 'Texto'}
+                         <motion.span initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-[9px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <CheckCircle2 size={10} /> {lastProcessedType === 'image' ? 'Imagem' : 'Texto'} OK
                          </motion.span>
                        )}
                     </div>
@@ -568,7 +563,7 @@ const App: React.FC = () => {
                         placeholder="Cole o relatório de texto aqui ou apenas Ctrl+V se tiver copiado uma imagem de status..." 
                         value={smartPasteText} 
                         onChange={(e) => handleSmartPasteChange(e.target.value)} 
-                        className="w-full h-56 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-base font-black text-black outline-none focus:border-red-400 focus:bg-white transition-all resize-none placeholder:text-slate-400" 
+                        className="w-full h-28 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-4 text-xs font-black text-black outline-none focus:border-red-400 focus:bg-white transition-all resize-none placeholder:text-slate-400" 
                       />
                     </div>
                   </div>
@@ -578,34 +573,34 @@ const App: React.FC = () => {
                       e.preventDefault(); 
                       requestAuthorization("Confirmar Atualização", () => setActiveTab('dashboard')); 
                     }} 
-                    className="space-y-14"
+                    className="space-y-6"
                   >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {[
-                        { id: 'enviado', label: 'Mensagens Recebidas', color: 'focus:border-red-600' }, 
-                        { id: 'naoWhatsapp', label: 'Contatos Não São WhatsApp', color: 'focus:border-slate-900' }, 
-                        { id: 'semNumero', label: 'Contatos Sem Número', color: 'focus:border-slate-600' }, 
+                        { id: 'enviado', label: 'Recebidas', color: 'focus:border-red-600' }, 
+                        { id: 'naoWhatsapp', label: 'Não WhatsApp', color: 'focus:border-slate-900' }, 
+                        { id: 'semNumero', label: 'Sem Número', color: 'focus:border-slate-600' }, 
                         { id: 'paraEnviar', label: 'Para Enviar', color: 'focus:border-blue-600' }
                       ].map((field) => (
-                        <div key={field.id} className="space-y-4">
-                          <label className="text-[10px] font-black text-black uppercase tracking-widest ml-1">{field.label}</label>
+                        <div key={field.id} className="space-y-1.5">
+                          <label className="text-[9px] font-black text-black uppercase tracking-widest ml-1">{field.label}</label>
                           <input 
                             type="number" 
                             value={(currentMonth as any)[field.id]} 
                             onChange={e => updateCurrentData({ [field.id]: e.target.value })} 
-                            className={`w-full bg-slate-50 border border-slate-300 rounded-2xl px-8 py-5 text-3xl font-black text-black outline-none transition-all ${field.color}`} 
+                            className={`w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xl font-black text-black outline-none transition-all ${field.color}`} 
                           />
                         </div>
                       ))}
                     </div>
                     
-                    <div className="pt-12 flex flex-col sm:flex-row items-center justify-between gap-12 border-t border-slate-100">
-                      <div>
-                        <p className="text-[10px] font-black text-black uppercase tracking-widest mb-2">Total Consolidado</p>
-                        <span className="text-5xl font-black text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
+                    <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100">
+                      <div className="text-center sm:text-left">
+                        <p className="text-[9px] font-black text-black uppercase tracking-widest mb-1">Total Consolidado</p>
+                        <span className="text-3xl font-black text-black leading-none">{currentMonth.totalProcessado.toLocaleString('pt-BR')}</span>
                       </div>
-                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-12 py-6 rounded-3xl font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-5 shadow-2xl shadow-red-900/20">
-                        Confirmar e Atualizar <ChevronRight size={22} />
+                      <button type="submit" className="w-full sm:w-auto premium-red-gradient text-white px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-red-900/10">
+                        Confirmar e Atualizar <ChevronRight size={18} />
                       </button>
                     </div>
                   </form>
@@ -648,7 +643,7 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
 
-        <footer className="mt-20 pb-8 pt-8 border-t border-slate-200 flex items-center justify-center gap-4">
+        <footer className="mt-12 pb-8 pt-8 border-t border-slate-200 flex items-center justify-center gap-4">
            <span className="text-black text-[10px] font-black uppercase tracking-[0.2em]">Powered by</span>
            <motion.img 
             src={LOGO_URL} 
@@ -658,105 +653,21 @@ const App: React.FC = () => {
         </footer>
       </main>
 
-      {/* MODAL PREVIEW RELATÓRIO (PDF SIMULATOR) */}
-      <AnimatePresence>
-        {reportToPreview && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] overflow-y-auto p-4 sm:p-10 flex justify-center">
-             <div className="max-w-[800px] w-full bg-white shadow-2xl rounded-sm p-0 flex flex-col relative self-start">
-                
-                {/* TOOLBAR */}
-                <div className="sticky top-0 z-50 bg-slate-100 p-4 border-b border-slate-200 flex items-center justify-between print:hidden">
-                   <div className="flex items-center gap-4">
-                      <button onClick={() => window.print()} className="bg-red-700 text-white px-6 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:bg-red-800 transition-all">
-                        <Printer size={14} /> Imprimir / Salvar PDF
-                      </button>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase hidden sm:block">Padrão: Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
-                   </div>
-                   <button onClick={() => setReportToPreview(null)} className="p-2 text-slate-400 hover:text-red-700 transition-all">
-                      <X size={24} />
-                   </button>
-                </div>
+      <div className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[320px] z-50">
+        <nav className="bg-white/95 backdrop-blur-2xl border border-slate-200 rounded-[2rem] px-2 py-1.5 flex items-center justify-around shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
+          {[
+            { id: 'dashboard', label: 'Monitor', icon: LayoutDashboard },
+            { id: 'history', label: 'Ciclos', icon: Calendar },
+            { id: 'new', label: 'Add', icon: Plus }
+          ].map((item) => (
+            <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`flex items-center gap-2 px-4 py-2.5 rounded-[1.5rem] transition-all duration-400 ${activeTab === item.id ? 'bg-red-900 text-white shadow-lg' : 'text-slate-500'}`}>
+              <item.icon size={18} strokeWidth={activeTab === item.id ? 3 : 2} />
+              {activeTab === item.id && <span className="text-[10px] font-black uppercase tracking-tight whitespace-nowrap">{item.label}</span>}
+            </button>
+          ))}
+        </nav>
+      </div>
 
-                {/* PDF CONTENT */}
-                <div id="printable-report" className="bg-white p-12 sm:p-20 text-slate-800 font-sans leading-relaxed relative overflow-hidden min-h-[1100px]">
-                   
-                   {/* Header Logo */}
-                   <div className="flex justify-start mb-16">
-                      <img src={LOGO_URL} alt="Logo" className="h-24 w-auto object-contain" />
-                   </div>
-
-                   <div className="space-y-8">
-                      <p className="font-bold text-lg">RedMaxx® Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
-                      
-                      <div className="space-y-1">
-                        <p className="font-bold">Título do Projeto: <span className="font-normal">API de Comunicação RedMaxx aplicada à notificação de contemplados do Bolsa Família – {reportToPreview.monthName}</span></p>
-                      </div>
-
-                      <p className="font-bold">Solicitante: <span className="font-normal">SEMASC</span></p>
-                      <p className="font-bold">Data: <span className="font-normal">Manaus, em {new Date().toLocaleDateString('pt-BR')}</span></p>
-
-                      <div className="space-y-4">
-                        <p className="font-bold">Contexto e Desafio:</p>
-                        <p className="text-sm text-justify">
-                          A Secretaria Municipal de Assistência Social (SEMASC) tem como missão ampliar o alcance das informações referentes ao programa Bolsa Família, garantindo que o maior número de contemplados seja notificado de forma clara e tempestiva. O desafio central deste projeto é assegurar a máxima cobertura do público-alvo, fortalecendo a comunicação institucional e garantindo que os beneficiários recebam, de forma ágil e confiável, os avisos relacionados ao benefício.
-                        </p>
-                      </div>
-
-                      <div className="space-y-4 pt-4">
-                        <p className="font-bold">Execução via API RedMaxx de Comunicação</p>
-                        <p className="font-bold">Operação de Envio</p>
-                        <ul className="list-disc ml-8">
-                           <li>Processados: <strong>{reportToPreview.totalProcessado} contatos</strong></li>
-                        </ul>
-                      </div>
-
-                      <div className="space-y-4 pt-4 border-t border-slate-200">
-                        <p className="font-bold">Consolidado Geral</p>
-                        <p>• Total previsto : <strong>{reportToPreview.totalProcessado} contatos</strong></p>
-                        <p>• Total processados com API RedMaxx: <strong>{reportToPreview.enviado} contatos atingidos</strong></p>
-                        <p>• Taxa de entrega geral: <strong>{reportToPreview.taxaSucesso}% concluído</strong></p>
-                      </div>
-
-                      <div className="space-y-4 pt-6 border-t border-slate-200">
-                        <p className="font-bold">Conclusão</p>
-                        <p className="text-sm text-justify">
-                          A utilização da <strong>API de Comunicação RedMaxx</strong> garantiu confiabilidade e consistência em todo o processo, com tempos médios estáveis e finalização bem-sucedida de todas as operações. Foram atingidos {reportToPreview.enviado} beneficiários, correspondendo a {reportToPreview.taxaSucesso}% da base prevista.
-                        </p>
-                        <p className="text-sm text-justify">
-                          Essa iniciativa reforça o papel estratégico da RedMaxx como fornecedora de soluções de comunicação inteligente para o setor público, assegurando eficiência, rastreabilidade e escalabilidade para futuras campanhas sociais.
-                        </p>
-                      </div>
-                   </div>
-
-                   {/* Footer PDF */}
-                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end border-t pt-8 border-slate-100 text-[9px] text-slate-400">
-                      <div className="space-y-1 uppercase font-bold tracking-wider">
-                         <p className="text-slate-600">Manaus – AM - Matriz</p>
-                         <p>R. Rio Purús, 458, Cj.Vieiralves | N. Sra. das Graças</p>
-                         <p>CEP 69053-050 • Manaus/AM • (92) 98415-5929</p>
-                         <p>marcio.lins@redmaxx.com.br</p>
-                         <p>CNPJ: 31.291.580/0001-47</p>
-                      </div>
-                      <div className="space-y-1 uppercase font-bold tracking-wider text-right">
-                         <p className="text-slate-600">São Paulo - SP - Filial</p>
-                         <p>Av. Engenheiro Luiz Carlos Berrini, 1140</p>
-                         <p>7° Andar - Sala 201/202 | Cidade Monções</p>
-                         <p>CEP 04571-000 • São Paulo/SP</p>
-                         <p>Telefone: (11) 2391-0597</p>
-                      </div>
-                   </div>
-
-                   {/* Decorative X (Simulating the PDF design) */}
-                   <div className="absolute bottom-[-100px] right-[-100px] opacity-[0.03] pointer-events-none rotate-12">
-                      <img src={LOGO_URL} alt="" className="w-[600px] grayscale" />
-                   </div>
-                </div>
-             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL DE AUTENTICAÇÃO */}
       <AnimatePresence>
         {isAuthOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[200] flex items-center justify-center p-8">
@@ -767,16 +678,13 @@ const App: React.FC = () => {
               className="bg-white rounded-[3rem] p-12 sm:p-16 text-center shadow-[0_40px_100px_rgba(0,0,0,0.5)] max-w-md w-full relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-2 premium-red-gradient" />
-              
               <div className="mb-10 inline-flex p-6 rounded-3xl bg-slate-50 border border-slate-200 text-red-700 shadow-inner">
                  <ShieldAlert size={48} strokeWidth={1.5} />
               </div>
-
               <h3 className="text-3xl font-black text-black mb-2 tracking-tight">Autorização Necessária</h3>
               <p className="text-black text-[10px] font-black uppercase tracking-[0.2em] mb-12">
                 COMANDO: <span className="text-red-800">{pendingAction?.label}</span>
               </p>
-
               <div className="space-y-8">
                 <div className="relative group">
                   <div className={`absolute inset-0 bg-red-600/10 rounded-2xl blur-xl opacity-0 transition-opacity duration-500 group-focus-within:opacity-100`} />
@@ -798,7 +706,6 @@ const App: React.FC = () => {
                     </motion.p>
                   )}
                 </div>
-
                 <div className="flex gap-4 pt-4">
                   <button 
                     onClick={() => { setIsAuthOpen(false); setPendingAction(null); }}
@@ -832,6 +739,87 @@ const App: React.FC = () => {
               <h3 className="text-2xl font-black text-black mb-3 tracking-tight">Extraindo Dados</h3>
               <p className="text-black text-[11px] font-black uppercase tracking-widest leading-relaxed">Analisando imagem com inteligência artificial de alto desempenho</p>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {reportToPreview && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] overflow-y-auto p-4 sm:p-10 flex justify-center">
+             <div className="max-w-[800px] w-full bg-white shadow-2xl rounded-sm p-0 flex flex-col relative self-start">
+                <div className="sticky top-0 z-50 bg-slate-100 p-4 border-b border-slate-200 flex items-center justify-between print:hidden">
+                   <div className="flex items-center gap-4">
+                      <button onClick={() => window.print()} className="bg-red-700 text-white px-6 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg hover:bg-red-800 transition-all">
+                        <Printer size={14} /> Imprimir / Salvar PDF
+                      </button>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase hidden sm:block">Padrão: Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
+                   </div>
+                   <button onClick={() => setReportToPreview(null)} className="p-2 text-slate-400 hover:text-red-700 transition-all">
+                      <X size={24} />
+                   </button>
+                </div>
+
+                <div id="printable-report" className="bg-white p-12 sm:p-20 text-slate-800 font-sans leading-relaxed relative overflow-hidden min-h-[1100px]">
+                   <div className="flex justify-start mb-16">
+                      <img src={LOGO_URL} alt="Logo" className="h-24 w-auto object-contain" />
+                   </div>
+                   <div className="space-y-8">
+                      <p className="font-bold text-lg">RedMaxx® Projeto de Comunicação Bolsa Família ({reportToPreview.monthName})</p>
+                      <div className="space-y-1">
+                        <p className="font-bold">Título do Projeto: <span className="font-normal">API de Comunicação RedMaxx aplicada à notificação de contemplados do Bolsa Família – {reportToPreview.monthName}</span></p>
+                      </div>
+                      <p className="font-bold">Solicitante: <span className="font-normal">SEMASC</span></p>
+                      <p className="font-bold">Data: <span className="font-normal">Manaus, em {new Date().toLocaleDateString('pt-BR')}</span></p>
+                      <div className="space-y-4">
+                        <p className="font-bold">Contexto e Desafio:</p>
+                        <p className="text-sm text-justify">
+                          A Secretaria Municipal de Assistência Social (SEMASC) tem como missão ampliar o alcance das informações referentes ao programa Bolsa Família, garantindo que o maior número de contemplados seja notificado de forma clara e tempestiva. O desafio central deste projeto é assegurar a máxima cobertura do público-alvo, fortalecendo a comunicação institucional e garantindo que os beneficiários recebam, de forma ágil e confiável, os avisos relacionados ao benefício.
+                        </p>
+                      </div>
+                      <div className="space-y-4 pt-4">
+                        <p className="font-bold">Execução via API RedMaxx de Comunicação</p>
+                        <p className="font-bold">Operação de Envio</p>
+                        <ul className="list-disc ml-8">
+                           <li>Processados: <strong>{reportToPreview.totalProcessado} contatos</strong></li>
+                        </ul>
+                      </div>
+                      <div className="space-y-4 pt-4 border-t border-slate-200">
+                        <p className="font-bold">Consolidado Geral</p>
+                        <p>• Total previsto : <strong>{reportToPreview.totalProcessado} contatos</strong></p>
+                        <p>• Total processados com API RedMaxx: <strong>{reportToPreview.enviado} contatos atingidos</strong></p>
+                        <p>• Taxa de entrega geral: <strong>{reportToPreview.taxaSucesso}% concluído</strong></p>
+                      </div>
+                      <div className="space-y-4 pt-6 border-t border-slate-200">
+                        <p className="font-bold">Conclusão</p>
+                        <p className="text-sm text-justify">
+                          A utilização da <strong>API de Comunicação RedMaxx</strong> garantiu confiabilidade e consistência em todo o processo, com tempos médios estáveis e finalização bem-sucedida de todas as operações. Foram atingidos {reportToPreview.enviado} beneficiários, correspondendo a {reportToPreview.taxaSucesso}% da base prevista.
+                        </p>
+                        <p className="text-sm text-justify">
+                          Essa iniciativa reforça o papel estratégico da RedMaxx como fornecedora de soluções de comunicação inteligente para o setor público, assegurando eficiência, rastreabilidade e escalabilidade para futuras campanhas sociais.
+                        </p>
+                      </div>
+                   </div>
+                   <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end border-t pt-8 border-slate-100 text-[9px] text-slate-400">
+                      <div className="space-y-1 uppercase font-bold tracking-wider">
+                         <p className="text-slate-600">Manaus – AM - Matriz</p>
+                         <p>R. Rio Purús, 458, Cj.Vieiralves | N. Sra. das Graças</p>
+                         <p>CEP 69053-050 • Manaus/AM • (92) 98415-5929</p>
+                         <p>marcio.lins@redmaxx.com.br</p>
+                         <p>CNPJ: 31.291.580/0001-47</p>
+                      </div>
+                      <div className="space-y-1 uppercase font-bold tracking-wider text-right">
+                         <p className="text-slate-600">São Paulo - SP - Filial</p>
+                         <p>Av. Engenheiro Luiz Carlos Berrini, 1140</p>
+                         <p>7° Andar - Sala 201/202 | Cidade Monções</p>
+                         <p>CEP 04571-000 • São Paulo/SP</p>
+                         <p>Telefone: (11) 2391-0597</p>
+                      </div>
+                   </div>
+                   <div className="absolute bottom-[-100px] right-[-100px] opacity-[0.03] pointer-events-none rotate-12">
+                      <img src={LOGO_URL} alt="" className="w-[600px] grayscale" />
+                   </div>
+                </div>
+             </div>
           </motion.div>
         )}
       </AnimatePresence>
